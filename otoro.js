@@ -1,9 +1,47 @@
-var express = require("express");
-var app = express();
+var express = require("express"),
+    app = express(),
+    url = require('url'),
+    util = require('util'),
+    UserProvider = require('./userprovider-memory').UserProvider;
+
 app.use(express.logger());
+app.use(express.bodyParser());
+
+app.configure('development', function() {
+  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+});
+
+app.configure('production', function() {
+  app.use(express.errorHandler());
+});
+
+var userProvider = new UserProvider('localhost', 27017);
 
 app.get('/', function(request, response) {
   response.send('Hello World!');
+});
+
+app.post('/user/new', function(request, response) {
+  userProvider.save({
+    username: request.body.username,
+    password: request.body.password
+  }, function(error, docs) {
+    response.send("Successful!");
+  });
+});
+
+app.get('/user', function(request, response) {
+  userProvider.findAll(function(error, docs) {
+    response.send(docs);
+  });
+});
+
+/**
+* ie. set_user_field?field=dog&chicken=cat
+*/
+app.post('/set_user_field', function(request, response) {
+  var params = url.parse(request.url, true).query
+  response.send(util.format('User field set! field: %s, value: %s', params.field, params.val));
 });
 
 var port = process.env.PORT || 5000;
