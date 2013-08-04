@@ -38,6 +38,12 @@ app.get('/user', function(request, response) {
   });
 });
 
+app.get('/user/contents', function(request, response) {
+  var toros = '[{"id":1, "sender":1, "receiver":2, "lat":93.44, "long":32.44, "read":false}, {"id":1, "sender":1, "receiver":2, "lat":93.44, "long":32.44, "read":false}]';
+  response.setHeader('Content-Type', 'application/json');
+  response.send(toros);
+});
+
 /**
 * ie. set_user_field?field=dog&chicken=cat
 */
