@@ -4,7 +4,8 @@ var express = require("express"),
     util = require('util'),
     http = require('http'),
     path = require('path'),
-    UserProvider = require('./userprovider').UserProvider;
+    UserProvider = require('./userprovider').UserProvider,
+    ToroProvider = require('./toroprovider').ToroProvider;
 
 app.use(express.logger());
 app.use(express.bodyParser());
@@ -18,6 +19,7 @@ app.configure('production', function() {
 });
 
 var userProvider = new UserProvider('localhost', 27017);
+var toroProvider = new ToroProvider('localhost', 27017);
 
 app.get('/', function(request, response) {
   response.send('Hello World!');
@@ -38,10 +40,39 @@ app.get('/user', function(request, response) {
   });
 });
 
+app.get('/toro', function(request, response) {
+  toroProvider.findAll(function(error, docs) {
+    response.send(docs);
+  });
+});
+
+app.post('/toro/new', function(request, response) {
+  toroProvider.save({
+    latitude: request.body.latitude,
+    longitude: request.body.longitude,
+    sender: request.body.sender,
+    receiver: request.body.receiver
+  }, function(error, docs) {
+    response.send("Successful!");
+  });
+});
+
 app.get('/user/contents', function(request, response) {
   var toros = '[{"id":1, "sender":1, "receiver":2, "lat":93.44, "long":32.44, "read":false}, {"id":1, "sender":1, "receiver":2, "lat":93.44, "long":32.44, "read":false}]';
   response.setHeader('Content-Type', 'application/json');
   response.send(toros);
+});
+
+app.get('/toros/received/:id', function(request, response) {
+  toroProvider.findByReceiver(parseInt(request.params.id), function(error, docs) {
+    response.send(docs);
+  });
+});
+
+app.get('/toros/sent/:id', function(request, response) {
+  toroProvider.findBySender(parseInt(request.params.id), function(error, docs) {
+    response.send(docs);
+  });
 });
 
 /**
