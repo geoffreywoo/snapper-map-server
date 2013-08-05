@@ -1,8 +1,15 @@
-var Db = require('mongodb').Db;
-var Connection = require('mongodb').Connection;
-var Server = require('mongodb').Server;
-var BSON = require('mongodb').BSON;
-var ObjectID = require('mongodb').ObjectID;
+var mongo = require('mongodb'),
+    Db = mongo.Db,
+    Connection = mongo.Connection,
+    Server = mongo.Server,
+    BSON = mongo.BSON,
+    ObjectID = require('mongodb').ObjectID,
+    util = require('util'),
+    MongoClient = mongo.MongoClient;
+
+var mongoUri = process.env.MONGOLAB_URI ||
+  process.env.MONGOHQ_URL ||
+  'mongodb://localhost:27017/node-mongo-User';
 
 ToroProvider = function(host, port) {
   this.db= new Db('node-mongo-User', new Server(host, port, {safe: false}, {auto_reconnect: true}, {}));
@@ -11,6 +18,7 @@ ToroProvider = function(host, port) {
 
 
 ToroProvider.prototype.getCollection= function(callback) {
+  console.log(util.format('mongoUri: %s', mongoUri));
   this.db.collection('Toros', function(error, toro_collection) {
     if( error ) callback(error);
     else callback(null, toro_collection);
