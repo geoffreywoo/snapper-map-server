@@ -18,8 +18,8 @@ app.configure('production', function() {
   app.use(express.errorHandler());
 });
 
-var userProvider = new UserProvider('localhost', 27017);
-var toroProvider = new ToroProvider('localhost', 27017);
+var userProvider = new UserProvider('mongodb://localhost', 27017);
+var toroProvider = new ToroProvider('mongodb://localhost', 27017);
 
 app.get('/', function(request, response) {
   response.send('Hello World!');
@@ -58,7 +58,7 @@ app.post('/toro/new', function(request, response) {
 });
 
 app.get('/user/contents', function(request, response) {
-  var toros = '[{"id":1, "sender":1, "receiver":2, "lat":93.44, "long":32.44, "read":false}, {"id":1, "sender":1, "receiver":2, "lat":93.44, "long":32.44, "read":false}]';
+  var toros = '[{"id":1, "sender":1, "receiver":2, "lat":34.44, "long":32.44, "read":false}, {"id":2, "sender":1, "receiver":2, "lat":89.14, "long":12.56, "read":true}]';
   response.setHeader('Content-Type', 'application/json');
   response.send(toros);
 });
