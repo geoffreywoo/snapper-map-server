@@ -18,8 +18,8 @@ app.configure('production', function() {
   app.use(express.errorHandler());
 });
 
-var userProvider = new UserProvider('localhost', 27017);
-var toroProvider = new ToroProvider('localhost', 27017);
+var userProvider = new UserProvider('mongodb://localhost', 27017);
+var toroProvider = new ToroProvider('mongodb://localhost', 27017);
 
 app.get('/', function(request, response) {
   response.send('Hello World!');
@@ -58,7 +58,7 @@ app.post('/toro/new', function(request, response) {
 });
 
 app.get('/user/contents', function(request, response) {
-  var toros = '[{"id":1, "sender":1, "receiver":2, "lat":88.44, "long":32.44, "read":false}, {"id":2, "sender":1, "receiver":2, "lat":33.44, "long":32.44, "read":false}, {"id":3, "sender":1, "receiver":2, "lat":91.11, "long":23.44, "read":true}]';
+  var toros = '[{"id":1, "sender":1, "receiver":2, "lat":88.44, "long":32.44, "read":false}, {"id":2, "sender":1, "receiver":2, "lat":33.44, "long":32.44, "read":false}, {"id":3, "sender":1, "receiver":2, "lat":81.11, "long":23.44, "read":true}, {"id":4, "sender":1, "receiver":2, "lat":11.44, "long":11.44, "read":false}]';
   response.setHeader('Content-Type', 'application/json');
   response.send(toros);
 });
