@@ -58,7 +58,7 @@ app.post('/toro/new', function(request, response) {
 });
 
 app.get('/user/contents', function(request, response) {
-  var toros = '[{"id":1, "sender":1, "receiver":2, "lat":93.44, "long":32.44, "read":false}, {"id":1, "sender":1, "receiver":2, "lat":93.44, "long":32.44, "read":false}]';
+  var toros = '[{"id":1, "sender":1, "receiver":2, "lat":88.44, "long":32.44, "read":false}, {"id":2, "sender":1, "receiver":2, "lat":33.44, "long":32.44, "read":false}, {"id":3, "sender":1, "receiver":2, "lat":91.11, "long":23.44, "read":true}]';
   response.setHeader('Content-Type', 'application/json');
   response.send(toros);
 });
