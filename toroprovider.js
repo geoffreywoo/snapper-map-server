@@ -11,10 +11,6 @@ var mongoUri = process.env.MONGOLAB_URI ||
   process.env.MONGOHQ_URL ||
   'mongodb://localhost:27017/node-mongo-User';
 
-var mongoUri = process.env.MONGOLAB_URI ||
-  process.env.MONGOHQ_URL ||
-  'mongodb://localhost';
-
 ToroProvider = function(host, port) {
   this.db= new Db('node-mongo-User', new Server(host, port, {safe: false}, {auto_reconnect: true}, {}));
   this.db.open(function(){});
@@ -22,7 +18,6 @@ ToroProvider = function(host, port) {
 
 
 ToroProvider.prototype.getCollection= function(callback) {
-  console.log(util.format('mongoUri: %s', mongoUri));
   this.db.collection('Toros', function(error, toro_collection) {
     if( error ) callback(error);
     else callback(null, toro_collection);
@@ -31,24 +26,29 @@ ToroProvider.prototype.getCollection= function(callback) {
 
 ToroProvider.prototype.findByReceiver = function(id, callback) {
   this.getCollection(function(error, toro_collection) {
-    toro_collection.find({'receiver': id}, function(err, results) {
-      if ( error ) callback(error)
-      else {
-        callback(null, results)
-      }
-    });
+    if ( error ) callback(error);
+    else {
+      toro_collection.find({'receiver': id}).toArray(function(error, results) {
+        if ( error ) callback(error);
+        else {
+          callback(null, results);
+        }
+      });
+    }
   });
 };
 
 ToroProvider.prototype.findBySender = function(id, callback) {
   this.getCollection(function(error, toro_collection) {
-    toro_collection.find({'sender': id}).toArray(function(err, results) {
-      if ( error ) callback(error)
-      else {
-        console.log(results);
-        callback(null, results)
-      }
-    });
+    if ( error ) callback(error);
+    else {
+      toro_collection.find({'sender': id}).toArray(function(error, results) {
+        if ( error ) callback(error);
+        else {
+          callback(null, results);
+        }
+      });
+    }
   });
 };
 
@@ -59,7 +59,7 @@ ToroProvider.prototype.findAll = function(callback) {
       else {
         toro_collection.find().toArray(function(error, results) {
           if( error ) callback(error)
-          else callback(null, results)
+          else callback(null, results);
         });
       }
     });

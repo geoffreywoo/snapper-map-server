@@ -18,8 +18,8 @@ app.configure('production', function() {
   app.use(express.errorHandler());
 });
 
-var userProvider = new UserProvider('mongodb://localhost', 27017);
-var toroProvider = new ToroProvider('mongodb://localhost', 27017);
+var userProvider = new UserProvider('localhost', 27017);
+var toroProvider = new ToroProvider('localhost', 27017);
 
 app.get('/', function(request, response) {
   response.send('Hello World!');
