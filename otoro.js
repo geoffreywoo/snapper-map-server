@@ -18,8 +18,8 @@ app.configure('production', function() {
   app.use(express.errorHandler());
 });
 
-var userProvider = new UserProvider('mongodb://localhost', 27017);
-var toroProvider = new ToroProvider('mongodb://localhost', 27017);
+var userProvider = new UserProvider('localhost', 27017);
+var toroProvider = new ToroProvider('localhost', 27017);
 
 app.get('/', function(request, response) {
   response.send('Hello World!');
@@ -30,7 +30,11 @@ app.post('/user/new', function(request, response) {
     username: request.body.username,
     password: request.body.password
   }, function(error, docs) {
-    response.send("Successful!");
+    if (error) {
+      response.send("Error" + error);
+    } else {
+      response.send("Successful!" + docs);
+    }
   });
 });
 
@@ -51,9 +55,15 @@ app.post('/toro/new', function(request, response) {
     latitude: request.body.latitude,
     longitude: request.body.longitude,
     sender: request.body.sender,
-    receiver: request.body.receiver
+    receiver: request.body.receiver,
+    read:false
   }, function(error, docs) {
-    response.send("Successful!");
+    if (error)
+    {
+      response.send(error);
+    } else {
+      response.send("Successful!" + JSON.stringify(docs));
+    }
   });
 });
 
@@ -63,24 +73,36 @@ app.get('/user/contents', function(request, response) {
   response.send(toros);
 });
 
-app.get('/toros/received/:id', function(request, response) {
-  toroProvider.findByReceiver(parseInt(request.params.id), function(error, docs) {
+app.get('/toros/received/:user_id', function(request, response) {
+  toroProvider.findByReceiver(request.params.user_id, function(error, docs) {
     response.send(docs);
   });
 });
 
-app.get('/toros/sent/:id', function(request, response) {
-  toroProvider.findBySender(parseInt(request.params.id), function(error, docs) {
+app.get('/toros/sent/:user_id', function(request, response) {
+  toroProvider.findBySender(request.params.user_id, function(error, docs) {
     response.send(docs);
   });
 });
 
-/**
-* ie. set_user_field?field=dog&chicken=cat
-*/
-app.post('/set_user_field', function(request, response) {
-  var params = url.parse(request.url, true).query
-  response.send(util.format('User field set! field: %s, value: %s', params.field, params.val));
+app.post('/toros/set_read/:toro_id', function(request, response) {
+  toroProvider.update(request.params.toro_id, {"read":true}, function(error) {
+    if (error) {
+      response.send("Failed");
+    } else {
+      response.send("Successful");
+    }
+  });
+});
+
+app.post('/users/set_fields/:user_id', function(request, response) {
+  userProvider.update(request.params.user_id, request.body, function(error) {
+    if (error) {
+      response.send("Failed");
+    } else {
+      response.send("Successful");
+    }
+  });
 });
 
 var port = process.env.PORT || 5000;
