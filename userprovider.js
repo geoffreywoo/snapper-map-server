@@ -50,4 +50,15 @@ UserProvider.prototype.save = function(Users, callback) {
     });
 };
 
+UserProvider.prototype.update = function(user_id, updates, callback) {
+    this.getCollection(function(error, user_collection) {
+      if( error ) callback(error)
+      else {
+        user_collection.update({"_id":ObjectID(user_id)}, {"$set":updates}, function() {
+          callback(null);
+        });
+      }
+    });
+}
+
 exports.UserProvider = UserProvider;

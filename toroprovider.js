@@ -85,4 +85,15 @@ ToroProvider.prototype.save = function(Toros, callback) {
     });
 };
 
+ToroProvider.prototype.update = function(toro_id, updates, callback) {
+    this.getCollection(function(error, toro_collection) {
+      if( error ) callback(error)
+      else {
+        toro_collection.update({"_id":ObjectID(toro_id)}, {"$set":updates}, function() {
+          callback(null);
+        });
+      }
+    });
+}
+
 exports.ToroProvider = ToroProvider;
