@@ -74,19 +74,19 @@ app.get('/user/contents', function(request, response) {
 });
 
 app.get('/toros/received/:user_id', function(request, response) {
-  toroProvider.findByReceiver(request.params.user_id, function(error, docs) {
+  toroProvider.findByReceiver(parseInt(request.params.user_id), function(error, docs) {
     response.send(docs);
   });
 });
 
 app.get('/toros/sent/:user_id', function(request, response) {
-  toroProvider.findBySender(request.params.user_id, function(error, docs) {
+  toroProvider.findBySender(parseInt(request.params.user_id), function(error, docs) {
     response.send(docs);
   });
 });
 
 app.post('/toros/set_read/:toro_id', function(request, response) {
-  toroProvider.update(request.params.toro_id, {"read":true}, function(error) {
+  toroProvider.update(parseInt(request.params.toro_id), {"read":true}, function(error) {
     if (error) {
       response.send("Failed");
     } else {
@@ -96,7 +96,7 @@ app.post('/toros/set_read/:toro_id', function(request, response) {
 });
 
 app.post('/users/set_fields/:user_id', function(request, response) {
-  userProvider.update(request.params.user_id, request.body, function(error) {
+  userProvider.update(parseInt(request.params.user_id), request.body, function(error) {
     if (error) {
       response.send("Failed");
     } else {
