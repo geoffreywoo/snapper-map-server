@@ -26,15 +26,22 @@ app.get('/', function(request, response) {
 });
 
 app.post('/user/new', function(request, response) {
-  userProvider.save({
-    username: request.body.username,
-    password: request.body.password
-  }, function(error, docs) {
-    if (error) {
-      response.send("Error" + error);
-    } else {
-      response.send("Successful!" + docs);
+  userProvider.findByUsername(request.body.username, function(error, existing_users) {
+    if (error || existing_users.length > 0)
+    {
+      response.send("Already taken");
+      return;
     }
+    userProvider.save({
+      username: request.body.username,
+      password: request.body.password
+    }, function(error, docs) {
+      if (error) {
+        response.send("Error" + error);
+      } else {
+        response.send("Successful!" + docs);
+      }
+    });
   });
 });
 

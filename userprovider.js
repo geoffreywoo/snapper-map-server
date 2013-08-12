@@ -30,6 +30,19 @@ UserProvider.prototype.findAll = function(callback) {
     });
 };
 
+//find by username
+UserProvider.prototype.findByUsername = function(username, callback) {
+    this.getCollection(function(error, user_collection) {
+      if( error ) callback(error)
+      else {
+        user_collection.find({"_id":username}).toArray(function(error, results) {
+          if( error ) callback(error)
+          else callback(null, results)
+        });
+      }
+    });
+};
+
 //save new User
 UserProvider.prototype.save = function(Users, callback) {
     this.getCollection(function(error, user_collection) {
@@ -40,6 +53,7 @@ UserProvider.prototype.save = function(Users, callback) {
 
         for( var i =0;i< Users.length;i++ ) {
           User = Users[i];
+          User["_id"] = User.username;
           User.created_at = new Date();
         }
 
@@ -54,7 +68,7 @@ UserProvider.prototype.update = function(user_id, updates, callback) {
     this.getCollection(function(error, user_collection) {
       if( error ) callback(error)
       else {
-        user_collection.update({"_id":ObjectID(user_id)}, {"$set":updates}, function() {
+        user_collection.update({"_id":user_id}, {"$set":updates}, function() {
           callback(null);
         });
       }
