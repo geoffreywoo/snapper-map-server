@@ -5,17 +5,26 @@ var mongo = require('mongodb'),
     BSON = mongo.BSON,
     ObjectID = require('mongodb').ObjectID,
     util = require('util'),
+    MongoURI = require('mongo-uri'),
     MongoClient = mongo.MongoClient;
 
 var mongoUri = process.env.MONGOLAB_URI ||
   process.env.MONGOHQ_URL ||
   'mongodb://localhost:27017/node-mongo-User';
 
-ToroProvider = function(host, port) {
-  this.db= new Db('node-mongo-User', new Server(host, port, {safe: false}, {auto_reconnect: true}, {}));
-  this.db.open(function(){});
-};
+var mongoParsedUri = MongoURI.parse(mongoUri);
 
+ToroProvider = function(host, port) {
+  this.db= new Db(mongoParsedUri.database, new Server(mongoParsedUri.hosts[0], mongoParsedUri.ports[0], {safe: false}, {auto_reconnect: true}, {}));
+  this.db.open(function(err, client){
+    if (mongoParsedUri.username && mongoParsedUri.password) {
+      client.authenticate(mongoParsedUri.username, mongoParsedUri.password, function(error, success) {
+        console.log(error);
+        console.log(util.format("success is: %b", success));
+      });
+    }
+  });
+};
 
 ToroProvider.prototype.getCollection= function(callback) {
   this.db.collection('Toros', function(error, toro_collection) {
