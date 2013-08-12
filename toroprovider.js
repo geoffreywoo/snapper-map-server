@@ -66,20 +66,20 @@ ToroProvider.prototype.findAll = function(callback) {
 };
 
 //save new Toro
-ToroProvider.prototype.save = function(Toros, callback) {
+ToroProvider.prototype.save = function(toros, callback) {
     this.getCollection(function(error, toro_collection) {
       if( error ) callback(error)
       else {
-        if( typeof(Toros.length)=="undefined")
-          Toros = [Toros];
+        if( typeof(toros.length)=="undefined")
+          toros = [toros];
 
         for( var i =0;i< Toros.length;i++ ) {
-          Toro = Toros[i];
-          Toro.created_at = new Date();
+          toro = toros[i];
+          toro.created_at = new Date();
         }
 
-        toro_collection.insert(Toros, function() {
-          callback(null, Toros);
+        toro_collection.insert(toros, function() {
+          callback(null, toros);
         });
       }
     });

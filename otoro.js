@@ -6,6 +6,7 @@ var express = require("express"),
     path = require('path'),
     UserProvider = require('./userprovider').UserProvider,
     ToroProvider = require('./toroprovider').ToroProvider;
+    FriendProvider = require('./friendprovider').FriendProvider,
 
 app.use(express.logger());
 app.use(express.bodyParser());
@@ -20,6 +21,7 @@ app.configure('production', function() {
 
 var userProvider = new UserProvider('localhost', 27017);
 var toroProvider = new ToroProvider('localhost', 27017);
+var friendProvider = new FriendProvider('localhost', 27017);
 
 app.get('/', function(request, response) {
   response.send('Hello World!');
@@ -104,6 +106,32 @@ app.post('/toros/set_read/:toro_id', function(request, response) {
 
 app.post('/users/set_fields/:user_id', function(request, response) {
   userProvider.update(request.params.user_id, request.body, function(error) {
+    if (error) {
+      response.send("Failed");
+    } else {
+      response.send("Successful");
+    }
+  });
+});
+
+app.get('/friends/:user_id', function(request, response) {
+  friendProvider.findAll(request.params.user_id, function(error, docs) {
+    response.send(docs);
+  });
+});
+
+app.post('/friends/add/:user_id', function(request, response) {
+  friendProvider.save(request.params.user_id, request.body.friend_user_id, function(error) {
+    if (error) {
+      response.send("Failed");
+    } else {
+      response.send("Successful");
+    }
+  });
+});
+
+app.post('/friends/remove/:user_id', function(request, response) {
+  friendProvider.remove(request.params.user_id, request.body.friend_user_id, function(error) {
     if (error) {
       response.send("Failed");
     } else {

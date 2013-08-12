@@ -44,21 +44,21 @@ UserProvider.prototype.findByUsername = function(username, callback) {
 };
 
 //save new User
-UserProvider.prototype.save = function(Users, callback) {
+UserProvider.prototype.save = function(users, callback) {
     this.getCollection(function(error, user_collection) {
       if( error ) callback(error)
       else {
-        if( typeof(Users.length)=="undefined")
-          Users = [Users];
+        if( typeof(users.length)=="undefined")
+          users = [users];
 
-        for( var i =0;i< Users.length;i++ ) {
-          User = Users[i];
-          User["_id"] = User.username;
-          User.created_at = new Date();
+        for( var i =0;i< users.length;i++ ) {
+          user = users[i];
+          user["_id"] = User.username;
+          user.created_at = new Date();
         }
 
-        user_collection.insert(Users, function() {
-          callback(null, Users);
+        user_collection.insert(users, function() {
+          callback(null, users);
         });
       }
     });
