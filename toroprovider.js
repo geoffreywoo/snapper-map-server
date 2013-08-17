@@ -82,7 +82,7 @@ ToroProvider.prototype.save = function(toros, callback) {
         if( typeof(toros.length)=="undefined")
           toros = [toros];
 
-        for( var i =0;i< Toros.length;i++ ) {
+        for( var i =0;i< toros.length;i++ ) {
           toro = toros[i];
           toro.created_at = new Date();
         }
