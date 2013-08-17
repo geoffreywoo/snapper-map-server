@@ -20,11 +20,15 @@ UserProvider.prototype.getCollection= function(callback) {
 //find all Users
 UserProvider.prototype.findAll = function(callback) {
     this.getCollection(function(error, user_collection) {
-      if( error ) callback(error)
+      if(error) callback(error);
       else {
         user_collection.find().toArray(function(error, results) {
-          if( error ) callback(error)
-          else callback(null, results)
+          if (error) {
+            callback(error);
+          } else {
+            console.log(results);
+            callback(null, results);
+          } 
         });
       }
     });
@@ -33,11 +37,15 @@ UserProvider.prototype.findAll = function(callback) {
 //find by username
 UserProvider.prototype.findByUsername = function(username, callback) {
     this.getCollection(function(error, user_collection) {
-      if( error ) callback(error)
+      if(error) callback(error);
       else {
+        console.log(username);
         user_collection.find({"_id":username}).toArray(function(error, results) {
-          if( error ) callback(error)
-          else callback(null, results)
+          if(error) callback(error);
+          else {
+            console.log(results);
+            callback(null, results)
+          }
         });
       }
     });
@@ -53,7 +61,7 @@ UserProvider.prototype.save = function(users, callback) {
 
         for( var i =0;i< users.length;i++ ) {
           user = users[i];
-          user["_id"] = User.username;
+          user["_id"] = user.username;
           user.created_at = new Date();
         }
 

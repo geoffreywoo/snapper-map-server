@@ -27,6 +27,22 @@ app.get('/', function(request, response) {
   response.send('Hello World!');
 });
 
+app.post('/login', function(request, response) {
+    userProvider.findByUsername(request.body.username, function (error, existing_users) {
+    if (error) {
+      response.send("Error" + error);
+    } else {
+      for (var i = 0; i < existing_users.length; i++) {
+        if (request.body.password == existing_users[i].password) {
+          response.send(existing_users[i]);
+          return;
+        }
+      }
+      response.send("Error invalid login.");
+    }
+  });
+});
+
 app.post('/user/new', function(request, response) {
   userProvider.findByUsername(request.body.username, function(error, existing_users) {
     if (error || existing_users.length > 0)
@@ -50,6 +66,16 @@ app.post('/user/new', function(request, response) {
 app.get('/user', function(request, response) {
   userProvider.findAll(function(error, docs) {
     response.send(docs);
+  });
+});
+
+app.get('/user/:user_id', function(request, response) {
+  userProvider.findByUsername(request.params.user_id, function (error, existing_users) {
+    if (error) {
+      response.send("Error" + error);
+    } else {
+      response.send(existing_users);
+    }
   });
 });
 
