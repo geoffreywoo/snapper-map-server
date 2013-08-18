@@ -28,7 +28,7 @@ app.get('/', function(request, response) {
 });
 
 app.post('/login', function(request, response) {
-    userProvider.findByUsername(request.body.username, function (error, existing_users) {
+  userProvider.findByUsername(request.body.username, function (error, existing_users) {
     if (error) {
       response.send("Error" + error);
     } else {
@@ -44,7 +44,7 @@ app.post('/login', function(request, response) {
 });
 
 app.post('/user/new', function(request, response) {
-  userProvider.findByUsername(request.body.username, function(error, existing_users) {
+  userProvider.findByUsername(request.body.username, function (error, existing_users) {
     if (error || existing_users.length > 0)
     {
       response.send("Already taken");
@@ -52,7 +52,9 @@ app.post('/user/new', function(request, response) {
     }
     userProvider.save({
       username: request.body.username,
-      password: request.body.password
+      password: request.body.password,
+      email: request.body.email,
+      phone: request.body.phone
     }, function(error, docs) {
       if (error) {
         response.send("Error" + error);
