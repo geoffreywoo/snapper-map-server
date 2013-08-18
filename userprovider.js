@@ -5,6 +5,7 @@ var mongo = require('mongodb'),
     BSON = mongo.BSON,
     ObjectID = mongo.ObjectID,
     MongoURI = require('mongo-uri'),
+    util = require('util'),
     DBProvider = require('./dbprovider').DBProvider;
 
 var mongoUri = process.env.MONGOHQ_URL ||
@@ -38,12 +39,10 @@ UserProvider.prototype.findByUsername = function(username, callback) {
     this.dbProvider.getCollection('Users', function(error, user_collection) {
       if(error) callback(error);
       else {
-        console.log(username);
         user_collection.find({"_id":username}).toArray(function(error, results) {
           if(error) callback(error);
           else {
-            console.log(results);
-            callback(null, results)
+            callback(null, results);
           }
         });
       }
@@ -80,6 +79,22 @@ UserProvider.prototype.update = function(user_id, updates, callback) {
         });
       }
     });
+}
+
+UserProvider.prototype.remove = function(username, callback) {
+  this.dbProvider.getCollection('Users', function (error, user_collection) {
+    if (error) {
+      callback(error);
+    } else {
+      user_collection.remove({"_id":username}, function(error, numRemoved) {
+        if (error == null && numRemoved === undefined) {
+          error = util.format('User "%s" does not exist.', username);
+          numRemoved = 0;
+        }
+        callback(error, numRemoved);
+      });
+    }
+  });
 }
 
 exports.UserProvider = UserProvider;

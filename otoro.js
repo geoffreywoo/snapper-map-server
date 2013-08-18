@@ -53,6 +53,8 @@ app.post('/login', function(request, response) {
   userProvider.findByUsername(request.body.username, function (error, existing_users) {
     if (error) {
       sendResponse(response, error, null);
+    } else if (existing_users.length === 0) {
+      sendResponse(response, util.format('User "%s" not found.', request.body.username), null);
     } else {
       for (var i = 0; i < existing_users.length; i++) {
         if (request.body.password == existing_users[i].password) {
@@ -60,7 +62,7 @@ app.post('/login', function(request, response) {
           return;
         }
       }
-      sendResponse(response, "Password did not match.", null);
+      sendResponse(response, 'Password did not match.', null);
     }
   });
 });
@@ -90,9 +92,15 @@ app.get('/users', function(request, response) {
   });
 });
 
-app.get('/users/:user_id', function(request, response) {
-  userProvider.findByUsername(request.params.user_id, function (error, docs) {
-    sendResponse(response, error, existing_users);
+app.get('/users/:username', function(request, response) {
+  userProvider.findByUsername(request.params.username, function (error, docs) {
+    sendResponse(response, error, docs);
+  });
+});
+
+app.del('/users/:username', function(request, response) {
+  userProvider.remove(request.params.username, function(error, numRemoved) {
+    sendResponse(response, error, {"numRemoved":numRemoved});
   });
 });
 
@@ -148,12 +156,6 @@ app.get('/friends/:user_id', function(request, response) {
 
 app.post('/friends/add/:user_id', function(request, response) {
   friendProvider.save(request.params.user_id, request.body.friend_user_id, function(error) {
-    sendResponse(response, error, null);
-  });
-});
-
-app.delete('/friends/remove/:user_id', function(request, response) {
-  friendProvider.remove(request.params.user_id, request.body.friend_user_id, function(error) {
     sendResponse(response, error, null);
   });
 });
