@@ -12,22 +12,14 @@ var mongoUri = process.env.MONGOHQ_URL ||
 var mongoParsedUri = MongoURI.parse(mongoUri);
 
 FriendProvider = function() {
-  this.db= new Db(mongoParsedUri.database, new Server(mongoParsedUri.hosts[0], mongoParsedUri.ports[0], {safe: false}, {auto_reconnect: true}, {}));
-  this.db.open(function(){});
+  this.dbProvider = new DBProvider();
 };
 
 // Friends is structured like [{"user_id":"jonochang", "friends":["tonygwu", "geoffwoo"]}]
 
-FriendProvider.prototype.getCollection= function(callback) {
-  this.db.collection('Friends', function(error, friend_collection) {
-    if( error ) callback(error);
-    else callback(null, friend_collection);
-  });
-};
-
 //find all Friends
 FriendProvider.prototype.findAll = function(user_id, callback) {
-    this.getCollection(function(error, friend_collection) {
+    this.dbProvider.getCollection('Friends', function(error, friend_collection) {
       if( error ) callback(error)
       else {
         friend_collection.find({"user_id":user_id}).toArray(function(error, results) {

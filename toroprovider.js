@@ -15,24 +15,11 @@ var mongoUri = process.env.MONGOHQ_URL ||
 var mongoParsedUri = MongoURI.parse(mongoUri);
 
 ToroProvider = function() {
-  this.db= new Db(mongoParsedUri.database, new Server(mongoParsedUri.hosts[0], mongoParsedUri.ports[0], {safe: false}, {auto_reconnect: true}, {}));
-  this.db.open(function(err, client){
-    if (mongoParsedUri.username && mongoParsedUri.password) {
-      client.authenticate(mongoParsedUri.username, mongoParsedUri.password, function(error, success) {
-      });
-    }
-  });
-};
-
-ToroProvider.prototype.getCollection= function(callback) {
-  this.db.collection('Toros', function(error, toro_collection) {
-    if( error ) callback(error);
-    else callback(null, toro_collection);
-  });
+  this.dbProvider = new DBProvider();
 };
 
 ToroProvider.prototype.findByReceiver = function(id, callback) {
-  this.getCollection(function(error, toro_collection) {
+  this.dbProvider.getCollection('Toros', function(error, toro_collection) {
     if ( error ) callback(error);
     else {
       toro_collection.find({'receiver': id}).toArray(function(error, results) {
@@ -46,7 +33,7 @@ ToroProvider.prototype.findByReceiver = function(id, callback) {
 };
 
 ToroProvider.prototype.findBySender = function(id, callback) {
-  this.getCollection(function(error, toro_collection) {
+  this.dbProvider.getCollection('Toros', function(error, toro_collection) {
     if ( error ) callback(error);
     else {
       toro_collection.find({'sender': id}).toArray(function(error, results) {
@@ -61,7 +48,7 @@ ToroProvider.prototype.findBySender = function(id, callback) {
 
 //find all toros
 ToroProvider.prototype.findAll = function(callback) {
-    this.getCollection(function(error, toro_collection) {
+    this.dbProvider.getCollection('Toros', function(error, toro_collection) {
       if( error ) callback(error)
       else {
         toro_collection.find().toArray(function(error, results) {
@@ -74,7 +61,7 @@ ToroProvider.prototype.findAll = function(callback) {
 
 //save new Toro
 ToroProvider.prototype.save = function(toros, callback) {
-    this.getCollection(function(error, toro_collection) {
+    this.dbProvider.getCollection('Toros', function(error, toro_collection) {
       if( error ) callback(error)
       else {
         if( typeof(toros.length)=="undefined")
@@ -93,7 +80,7 @@ ToroProvider.prototype.save = function(toros, callback) {
 };
 
 ToroProvider.prototype.update = function(toro_id, updates, callback) {
-    this.getCollection(function(error, toro_collection) {
+    this.dbProvider.getCollection('Toros', function(error, toro_collection) {
       if( error ) callback(error)
       else {
         toro_collection.update({"_id":ObjectID(toro_id)}, {"$set":updates}, function() {

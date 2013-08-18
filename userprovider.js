@@ -1,9 +1,11 @@
-var Db = require('mongodb').Db,
-    Connection = require('mongodb').Connection,
-    Server = require('mongodb').Server,
-    BSON = require('mongodb').BSON,
-    ObjectID = require('mongodb').ObjectID,
-    MongoURI = require('mongo-uri');
+var mongo = require('mongodb'),
+    Db = mongo.Db,
+    Connection = mongo.Connection,
+    Server = mongo.Server,
+    BSON = mongo.BSON,
+    ObjectID = mongo.ObjectID,
+    MongoURI = require('mongo-uri'),
+    DBProvider = require('./dbprovider').DBProvider;
 
 var mongoUri = process.env.MONGOHQ_URL ||
   process.env.MONGOLAB_URI ||
@@ -12,28 +14,18 @@ var mongoUri = process.env.MONGOHQ_URL ||
 var mongoParsedUri = MongoURI.parse(mongoUri);
 
 UserProvider = function() {
-  this.db= new Db(mongoParsedUri.database, new Server(mongoParsedUri.hosts[0], mongoParsedUri.ports[0], {safe: false}, {auto_reconnect: true}, {}));
-  this.db.open(function(){});
-};
-
-
-UserProvider.prototype.getCollection= function(callback) {
-  this.db.collection('Users', function(error, user_collection) {
-    if( error ) callback(error);
-    else callback(null, user_collection);
-  });
+  this.dbProvider = new DBProvider();
 };
 
 //find all Users
 UserProvider.prototype.findAll = function(callback) {
-    this.getCollection(function(error, user_collection) {
+    this.dbProvider.getCollection('Users', function(error, user_collection) {
       if(error) callback(error);
       else {
         user_collection.find().toArray(function(error, results) {
           if (error) {
             callback(error);
           } else {
-            console.log(results);
             callback(null, results);
           } 
         });
@@ -43,7 +35,7 @@ UserProvider.prototype.findAll = function(callback) {
 
 //find by username
 UserProvider.prototype.findByUsername = function(username, callback) {
-    this.getCollection(function(error, user_collection) {
+    this.dbProvider.getCollection('Users', function(error, user_collection) {
       if(error) callback(error);
       else {
         console.log(username);
@@ -60,7 +52,7 @@ UserProvider.prototype.findByUsername = function(username, callback) {
 
 //save new User
 UserProvider.prototype.save = function(users, callback) {
-    this.getCollection(function(error, user_collection) {
+    this.dbProvider.getCollection('Users', function(error, user_collection) {
       if( error ) callback(error)
       else {
         if( typeof(users.length)=="undefined")
@@ -80,7 +72,7 @@ UserProvider.prototype.save = function(users, callback) {
 };
 
 UserProvider.prototype.update = function(user_id, updates, callback) {
-    this.getCollection(function(error, user_collection) {
+    this.dbProvider.getCollection('Users', function(error, user_collection) {
       if( error ) callback(error)
       else {
         user_collection.update({"_id":user_id}, {"$set":updates}, function() {
