@@ -99,8 +99,8 @@ app.get('/users/:username', function(request, response) {
 });
 
 app.del('/users/:username', function(request, response) {
-  userProvider.remove(request.params.username, function(error, numRemoved) {
-    sendResponse(response, error, {"numRemoved":numRemoved});
+  userProvider.remove(request.params.username, function(error) {
+    sendResponse(response, error, null);
   });
 });
 

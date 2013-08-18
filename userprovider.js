@@ -36,17 +36,22 @@ UserProvider.prototype.findAll = function(callback) {
 
 //find by username
 UserProvider.prototype.findByUsername = function(username, callback) {
-    this.dbProvider.getCollection('Users', function(error, user_collection) {
-      if(error) callback(error);
-      else {
-        user_collection.find({"_id":username}).toArray(function(error, results) {
-          if(error) callback(error);
-          else {
+  this.dbProvider.getCollection('Users', function(error, user_collection) {
+    if(error) callback(error);
+    else {
+      console.log(username);
+      user_collection.find({"_id":username}).toArray(function(error, results) {
+        if(error) callback(error);
+        else if (results.length > 0) {
+          callback(null, results);
+        } else {
+          user_collection.find({"username":username}).toArray(function(error, results) {
             callback(null, results);
-          }
-        });
-      }
-    });
+          });
+        }
+      });
+    }
+  });
 };
 
 //save new User
@@ -81,17 +86,23 @@ UserProvider.prototype.update = function(user_id, updates, callback) {
     });
 }
 
-UserProvider.prototype.remove = function(username, callback) {
-  this.dbProvider.getCollection('Users', function (error, user_collection) {
+UserProvider.prototype.remove = function(user_id, callback) {
+  var dbProvider = this.dbProvider;
+  this.findByUsername(user_id, function(error, results) {
     if (error) {
       callback(error);
+    } else if (results.length == 0) {
+      callback(util.format('User "%s" does not exist.', user_id));
     } else {
-      user_collection.remove({"_id":username}, function(error, numRemoved) {
-        if (error == null && numRemoved === undefined) {
-          error = util.format('User "%s" does not exist.', username);
-          numRemoved = 0;
+      dbProvider.getCollection('Users', function (error, user_collection) {
+        if (error) {
+          callback(error);
+        } else {
+          user_collection.remove({"_id":user_id}, function(error) {
+            callback(error);
+          });
+
         }
-        callback(error, numRemoved);
       });
     }
   });
