@@ -1,11 +1,18 @@
-var Db = require('mongodb').Db;
-var Connection = require('mongodb').Connection;
-var Server = require('mongodb').Server;
-var BSON = require('mongodb').BSON;
-var ObjectID = require('mongodb').ObjectID;
+var Db = require('mongodb').Db,
+    Connection = require('mongodb').Connection,
+    Server = require('mongodb').Server,
+    BSON = require('mongodb').BSON,
+    ObjectID = require('mongodb').ObjectID,
+    MongoURI = require('mongo-uri');
 
-UserProvider = function(host, port) {
-  this.db= new Db('node-mongo-User', new Server(host, port, {safe: false}, {auto_reconnect: true}, {}));
+var mongoUri = process.env.MONGOHQ_URL ||
+  process.env.MONGOLAB_URI ||
+  'mongodb://localhost:27017/node-mongo-User';
+
+var mongoParsedUri = MongoURI.parse(mongoUri);
+
+UserProvider = function() {
+  this.db= new Db(mongoParsedUri.database, new Server(mongoParsedUri.hosts[0], mongoParsedUri.ports[0], {safe: false}, {auto_reconnect: true}, {}));
   this.db.open(function(){});
 };
 

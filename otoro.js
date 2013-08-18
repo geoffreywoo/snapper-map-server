@@ -19,9 +19,9 @@ app.configure('production', function() {
   app.use(express.errorHandler());
 });
 
-var userProvider = new UserProvider('localhost', 27017);
-var toroProvider = new ToroProvider('localhost', 27017);
-var friendProvider = new FriendProvider('localhost', 27017);
+var userProvider = new UserProvider();
+var toroProvider = new ToroProvider();
+var friendProvider = new FriendProvider();
 
 app.get('/', function(request, response) {
   response.send('Hello World!');

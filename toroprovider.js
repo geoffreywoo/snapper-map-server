@@ -8,19 +8,17 @@ var mongo = require('mongodb'),
     MongoURI = require('mongo-uri'),
     MongoClient = mongo.MongoClient;
 
-var mongoUri = process.env.MONGOLAB_URI ||
-  process.env.MONGOHQ_URL ||
+var mongoUri = process.env.MONGOHQ_URL ||
+  process.env.MONGOLAB_URI ||
   'mongodb://localhost:27017/node-mongo-User';
 
 var mongoParsedUri = MongoURI.parse(mongoUri);
 
-ToroProvider = function(host, port) {
+ToroProvider = function() {
   this.db= new Db(mongoParsedUri.database, new Server(mongoParsedUri.hosts[0], mongoParsedUri.ports[0], {safe: false}, {auto_reconnect: true}, {}));
   this.db.open(function(err, client){
     if (mongoParsedUri.username && mongoParsedUri.password) {
       client.authenticate(mongoParsedUri.username, mongoParsedUri.password, function(error, success) {
-        console.log(error);
-        console.log(util.format("success is: %b", success));
       });
     }
   });
