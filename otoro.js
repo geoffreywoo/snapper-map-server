@@ -134,7 +134,7 @@ app.put('/toros/set_read/:toro_id', function(request, response) {
   });
 });
 
-app.put('/users/set_fields/:user_id', function(request, response) {
+app.put('/users/update/:user_id', function(request, response) {
   userProvider.update(request.params.user_id, request.body, function(error) {
     sendResponse(response, error, null);
   });
