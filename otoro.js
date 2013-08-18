@@ -23,142 +23,138 @@ var userProvider = new UserProvider();
 var toroProvider = new ToroProvider();
 var friendProvider = new FriendProvider();
 
+// only called when its 200
+var sendResponse = function (response, error, data) {
+  var responseObj;
+  if (error) {
+    responseObj = {"ok": false, "error": error}
+  } else {
+    if (data) {
+      var elementsArray;
+      if (data instanceof Array) {
+        elementsArray = data;
+      } else {
+        elementsArray = new Array(data);
+      }
+      responseObj = {"ok": true, "elements": elementsArray}
+    } else {
+      responseObj = {"ok": true};
+    }
+  }
+  response.setHeader("Content-Type", "application/json");
+  response.send(responseObj);
+}
+
 app.get('/', function(request, response) {
-  response.send('Hello World!');
+  sendResponse(response, null, 'Hello World!');
 });
 
 app.post('/login', function(request, response) {
   userProvider.findByUsername(request.body.username, function (error, existing_users) {
     if (error) {
-      response.send("Error" + error);
+      sendResponse(response, error, null);
     } else {
       for (var i = 0; i < existing_users.length; i++) {
         if (request.body.password == existing_users[i].password) {
-          response.send(existing_users[i]);
+          sendResponse(response, null, existing_users[i]);
           return;
         }
       }
-      response.send("Error invalid login.");
+      sendResponse(response, "Password did not match.", null);
     }
   });
 });
 
-app.post('/user/new', function(request, response) {
+app.post('/users/new', function(request, response) {
   userProvider.findByUsername(request.body.username, function (error, existing_users) {
-    if (error || existing_users.length > 0)
-    {
-      response.send("Already taken");
-      return;
-    }
-    userProvider.save({
-      username: request.body.username,
-      password: request.body.password,
-      email: request.body.email,
-      phone: request.body.phone
-    }, function(error, docs) {
-      if (error) {
-        response.send("Error" + error);
-      } else {
-        response.send("Successful!" + docs);
-      }
-    });
-  });
-});
-
-app.get('/user', function(request, response) {
-  userProvider.findAll(function(error, docs) {
-    response.send(docs);
-  });
-});
-
-app.get('/user/:user_id', function(request, response) {
-  userProvider.findByUsername(request.params.user_id, function (error, existing_users) {
     if (error) {
-      response.send("Error" + error);
+      sendResponse(response, error, null);
+    } else if (existing_users.length > 0) {
+      sendResponse(response, util.format('User "%s" already exists.'), null)
     } else {
-      response.send(existing_users);
+      userProvider.save({
+        username: request.body.username,
+        password: request.body.password,
+        email: request.body.email,
+        phone: request.body.phone
+      }, function(error, docs) {
+        sendResponse(response, error, docs);
+      });
     }
   });
 });
 
-app.get('/toro', function(request, response) {
-  toroProvider.findAll(function(error, docs) {
-    response.send(docs);
+app.get('/users', function(request, response) {
+  userProvider.findAll(function(error, docs) {
+    sendResponse(response, error, docs);
   });
 });
 
-app.post('/toro/new', function(request, response) {
+app.get('/users/:user_id', function(request, response) {
+  userProvider.findByUsername(request.params.user_id, function (error, docs) {
+    sendResponse(response, error, existing_users);
+  });
+});
+
+app.get('/toros', function(request, response) {
+  toroProvider.findAll(function (error, docs) {
+    sendResponse(response, error, docs);
+  });
+});
+
+app.post('/toros/new', function(request, response) {
   toroProvider.save({
     latitude: request.body.latitude,
     longitude: request.body.longitude,
     sender: request.body.sender,
     receiver: request.body.receiver,
+    message: request.body.message,
+    venue: request.body.venue,
     read:false
   }, function(error, docs) {
-    if (error)
-    {
-      response.send(error);
-    } else {
-      response.send("Successful!" + JSON.stringify(docs));
-    }
+    sendResponse(response, error, docs);
   });
 });
 
 app.get('/toros/received/:user_id', function(request, response) {
   toroProvider.findByReceiver(request.params.user_id, function(error, docs) {
-    response.send(docs);
+    sendResponse(response, error, docs);
   });
 });
 
 app.get('/toros/sent/:user_id', function(request, response) {
   toroProvider.findBySender(request.params.user_id, function(error, docs) {
-    response.send(docs);
+    sendResponse(response, error, docs);
   });
 });
 
-app.post('/toros/set_read/:toro_id', function(request, response) {
+app.put('/toros/set_read/:toro_id', function(request, response) {
   toroProvider.update(request.params.toro_id, {"read":true}, function(error) {
-    if (error) {
-      response.send("Failed");
-    } else {
-      response.send("Successful");
-    }
+    sendResponse(response, error, null);
   });
 });
 
-app.post('/users/set_fields/:user_id', function(request, response) {
+app.put('/users/set_fields/:user_id', function(request, response) {
   userProvider.update(request.params.user_id, request.body, function(error) {
-    if (error) {
-      response.send("Failed");
-    } else {
-      response.send("Successful");
-    }
+    sendResponse(response, error, null);
   });
 });
 
 app.get('/friends/:user_id', function(request, response) {
   friendProvider.findAll(request.params.user_id, function(error, docs) {
-    response.send(docs);
+    sendResponse(response, error, docs);
   });
 });
 
 app.post('/friends/add/:user_id', function(request, response) {
   friendProvider.save(request.params.user_id, request.body.friend_user_id, function(error) {
-    if (error) {
-      response.send("Failed");
-    } else {
-      response.send("Successful");
-    }
+    sendResponse(response, error, null);
   });
 });
 
-app.post('/friends/remove/:user_id', function(request, response) {
+app.delete('/friends/remove/:user_id', function(request, response) {
   friendProvider.remove(request.params.user_id, request.body.friend_user_id, function(error) {
-    if (error) {
-      response.send("Failed");
-    } else {
-      response.send("Successful");
-    }
+    sendResponse(response, error, null);
   });
 });
 
