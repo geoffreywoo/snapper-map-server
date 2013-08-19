@@ -19,15 +19,15 @@ FriendProvider = function() {
 
 //find all Friends
 FriendProvider.prototype.findAll = function(user_id, callback) {
-    this.dbProvider.getCollection('Friends', function(error, friend_collection) {
-      if( error ) callback(error)
-      else {
-        friend_collection.find({"user_id":user_id}).toArray(function(error, results) {
-          if( error ) callback(error)
-          else callback(null, results)
-        });
-      }
-    });
+  this.dbProvider.getCollection('Friends', function(error, friend_collection) {
+    if( error ) callback(error)
+    else {
+      friend_collection.find({"user_id":user_id}).toArray(function(error, results) {
+        if( error ) callback(error)
+        else callback(null, results)
+      });
+    }
+  });
 };
 
 editFunction = function(operation) {
