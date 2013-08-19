@@ -104,6 +104,12 @@ app.del('/users/:username', function(request, response) {
   });
 });
 
+app.put('/users/update/:user_id', function(request, response) {
+  userProvider.update(request.params.user_id, request.body, function(error) {
+    sendResponse(response, error, null);
+  });
+});
+
 app.get('/toros', function(request, response) {
   toroProvider.findAll(function (error, docs) {
     sendResponse(response, error, docs);
@@ -137,13 +143,13 @@ app.get('/toros/sent/:user_id', function(request, response) {
 });
 
 app.put('/toros/set_read/:toro_id', function(request, response) {
-  toroProvider.update(request.params.toro_id, {"read":true}, function(error) {
+  toroProvider.update(request.params.toro_id, {"read":request.body.read}, function(error) {
     sendResponse(response, error, null);
   });
 });
 
-app.put('/users/update/:user_id', function(request, response) {
-  userProvider.update(request.params.user_id, request.body, function(error) {
+app.put('/toros/update/:toro_id', function(request, response) {
+  toroProvider.update(request.params.toro_id, request.body, function(error) {
     sendResponse(response, error, null);
   });
 });
