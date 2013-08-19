@@ -162,7 +162,13 @@ app.get('/friends/:user_id', function(request, response) {
 
 app.post('/friends/add/:user_id', function(request, response) {
   friendProvider.save(request.params.user_id, request.body.friend_user_id, function(error) {
-    sendResponse(response, error, null);
+    if (error) {
+      sendResponse(response, error, null);
+    } else {
+      friendProvider.save(request.body.friend_user_id, request.params.user_id, function(error) {
+        sendResponse(response, error, null);
+      });
+    }
   });
 });
 
