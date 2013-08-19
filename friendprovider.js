@@ -32,7 +32,7 @@ FriendProvider.prototype.findAll = function(user_id, callback) {
 
 editFunction = function(operation) {
   return function(user_id, friends, callback) {
-    this.getCollection(function(error, friend_collection) {
+    this.dbProvider.getCollection('Friends', function(error, friend_collection) {
       if( error ) callback(error)
       else {
         if( typeof(friends.length)=="undefined")
