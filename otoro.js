@@ -160,15 +160,39 @@ app.get('/friends/:user_id', function(request, response) {
   });
 });
 
-app.post('/friends/add/:user_id', function(request, response) {
-  friendProvider.save(request.params.user_id, request.body.friend_user_id, function(error) {
+app.get('/friends/:user_id/:friend_user_id', function(request, response) {
+  friendProvider.find(request.params.user_id, request.params.friend_user_id, function(error, docs) {
+    sendResponse(response, error, docs);
+  });
+});
+
+app.post('/friends/:user_id/:friend_user_id', function(request, response) {
+  friendProvider.save(request.params.user_id, request.params.friend_user_id, function(error, friends) {
     if (error) {
       sendResponse(response, error, null);
     } else {
-      friendProvider.save(request.body.friend_user_id, request.params.user_id, function(error) {
-        sendResponse(response, error, null);
+      friendProvider.save(request.params.friend_user_id, request.params.user_id, function(error) {
+        sendResponse(response, error, friends);
       });
     }
+  });
+});
+
+app.del('/friends/:user_id/:friend_user_id', function(request, response) {
+  friendProvider.remove(request.params.user_id, request.params.friend_user_id, function(error, friends) {
+    if (error) {
+      sendResponse(response, error, null);
+    } else {
+      friendProvider.remove(request.params.friend_user_id, request.params.user_id, function(error) {
+        sendResponse(response, error, friends);
+      });
+    }
+  });
+});
+
+app.put('/friends/:user_id/:friend_user_id', function(request, response) {
+  friendProvider.update(request.params.user_id, request.params.friend_user_id, function(error, friend) {
+      sendResponse(response, error, friend);
   });
 });
 

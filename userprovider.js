@@ -28,7 +28,7 @@ UserProvider.prototype.findAll = function(callback) {
             callback(error);
           } else {
             callback(null, results);
-          } 
+          }
         });
       }
     });
@@ -55,9 +55,11 @@ UserProvider.prototype.findByUsername = function(username, callback) {
 };
 
 //save new User
-UserProvider.prototype.save = function(users, callback) {
-    this.dbProvider.getCollection('Users', function(error, user_collection) {
-      if( error ) callback(error)
+UserProvider.prototype.save = function (users, callback) {
+    this.dbProvider.getCollection('Users', function (error, user_collection) {
+      if (error) {
+        callback(error);
+      }
       else {
         if( typeof(users.length)=="undefined")
           users = [users];
@@ -75,16 +77,17 @@ UserProvider.prototype.save = function(users, callback) {
     });
 };
 
-UserProvider.prototype.update = function(user_id, updates, callback) {
-    this.dbProvider.getCollection('Users', function(error, user_collection) {
-      if( error ) callback(error)
-      else {
+UserProvider.prototype.update = function (user_id, updates, callback) {
+    this.dbProvider.getCollection('Users', function (error, user_collection) {
+      if (error) {
+        callback(error)
+      } else {
         user_collection.update({"_id":user_id}, {"$set":updates}, function() {
           callback(null);
         });
       }
     });
-}
+};
 
 UserProvider.prototype.remove = function(user_id, callback) {
   var dbProvider = this.dbProvider;
