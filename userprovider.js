@@ -20,18 +20,18 @@ UserProvider = function() {
 
 //find all Users
 UserProvider.prototype.findAll = function(callback) {
-    this.dbProvider.getCollection('Users', function(error, user_collection) {
-      if(error) callback(error);
-      else {
-        user_collection.find().toArray(function(error, results) {
-          if (error) {
-            callback(error);
-          } else {
-            callback(null, results);
-          }
-        });
-      }
-    });
+  this.dbProvider.getCollection('Users', function(error, user_collection) {
+    if(error) callback(error);
+    else {
+      user_collection.find().toArray(function(error, results) {
+        if (error) {
+          callback(error);
+        } else {
+          callback(null, results);
+        }
+      });
+    }
+  });
 };
 
 //find by username

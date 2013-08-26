@@ -167,15 +167,30 @@ app.get('/friends/:user_id/:friend_user_id', function(request, response) {
 });
 
 app.post('/friends/:user_id/:friend_user_id', function(request, response) {
-  friendProvider.save(request.params.user_id, request.params.friend_user_id, function(error, friends) {
-    if (error) {
-      sendResponse(response, error, null);
+  var user_id = request.params.user_id;
+  var friend_user_id = request.params.friend_user_id;
+  userProvider.findByUsername(user_id, function(error, results) {
+    if (error || results.length == 0) {
+      sendResponse(response, util.format('User "%s" was not found.', user_id), null);
     } else {
-      friendProvider.save(request.params.friend_user_id, request.params.user_id, function(error) {
-        sendResponse(response, error, friends);
+      userProvider.findByUsername(friend_user_id, function(error, results) {
+        if (error || results.length == 0) {
+          sendResponse(response, util.format('User "%s" was not found.', friend_user_id), null);
+        } else {
+          friendProvider.save(user_id, friend_user_id, function(error, friends) {
+          if (error) {
+            sendResponse(response, error, null);
+          } else {
+            friendProvider.save(request.params.friend_user_id, request.params.user_id, function(error) {
+              sendResponse(response, error, friends);
+            });
+          }
+        });
+        }
       });
     }
   });
+
 });
 
 app.del('/friends/:user_id/:friend_user_id', function(request, response) {
