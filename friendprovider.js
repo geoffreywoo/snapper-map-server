@@ -30,7 +30,7 @@ FriendProvider.prototype.findAll = function(user_id, callback) {
         } else if (result) {
           callback(null, result.friends);
         } else {
-          callback(util.format('User "%s" has no friends.'), null);
+          callback(util.format('User "%s" has no friends.', user_id), null);
         }
       });
     }
