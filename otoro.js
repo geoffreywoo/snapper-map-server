@@ -198,7 +198,7 @@ app.del('/friends/:user_id/:friend_user_id', function(request, response) {
       sendResponse(response, error, null);
     } else {
       friendProvider.remove(request.params.friend_user_id, {"user_id": request.params.user_id}, function(error) {
-        sendResponse(response, error, friends);
+        sendResponse(response, error, null);
       });
     }
   });
