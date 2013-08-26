@@ -198,15 +198,22 @@ app.del('/friends/:user_id/:friend_user_id', function(request, response) {
       sendResponse(response, error, null);
     } else {
       friendProvider.remove(request.params.friend_user_id, {"user_id": request.params.user_id}, function(error) {
-        sendResponse(response, error, null);
+        sendResponse(response, error, friends);
       });
     }
   });
 });
 
+app.put('/friends/block/:user_id/:friend_user_id', function(request, response) {
+  friendProvider.update(request.params.user_id, {"user_id": request.params.friend_user_id, "blocked": true}, function(error, friend) {
+    sendResponse(response, error, friend);
+  });
+});
+
+// TODO check this endpoint works.
 app.put('/friends/:user_id/:friend_user_id', function(request, response) {
-  friendProvider.update(request.params.user_id, request.params.friend_user_id, function(error, friend) {
-      sendResponse(response, error, friend);
+  friendProvider.update(request.params.user_id, request.body, function(error, friend) {
+      sendResponse(response, error, null);
   });
 });
 

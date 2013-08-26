@@ -27,8 +27,10 @@ FriendProvider.prototype.findAll = function(user_id, callback) {
       friend_collection.findOne({"user_id": user_id}, function(error, result) {
         if (error) {
           callback(error)
-        } else {
+        } else if (result) {
           callback(null, result.friends);
+        } else {
+          callback(util.format('User "%s" has no friends.'), null);
         }
       });
     }
@@ -66,7 +68,7 @@ editFunction = function(operation) {
   return function(user_id, friends, callback) {
     this.dbProvider.getCollection('Friends', function(error, friend_collection) {
       if (error) {
-        callback(error)
+        callback(error);
       } else {
         updates = {};
         updates[operation] = {"friends": friends};
