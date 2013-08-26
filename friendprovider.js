@@ -21,11 +21,15 @@ FriendProvider = function() {
 //find all Friends
 FriendProvider.prototype.findAll = function(user_id, callback) {
   this.dbProvider.getCollection('Friends', function(error, friend_collection) {
-    if( error ) callback(error)
-    else {
-      friend_collection.find({"user_id":user_id}).toArray(function(error, results) {
-        if( error ) callback(error)
-        else callback(null, results)
+    if (error) {
+      callback(error);
+    } else {
+      friend_collection.findOne({"user_id": user_id}, function(error, result) {
+        if (error) {
+          callback(error)
+        } else {
+          callback(null, result.friends);
+        }
       });
     }
   });
@@ -37,20 +41,21 @@ FriendProvider.prototype.find = function(user_id, friend_user_id, callback) {
     if (error) {
       callback(error);
     } else {
-      friend_collection.findOne({"user_id":user_id}, function(error, result) {
+      friend_collection.findOne({"user_id": user_id}, function(error, result) {
         if (error) {
           callback(error);
-        } else {
+        } else if (result) {
           var friends = result.friends;
           for (var i = 0; i < friends.length; i++) {
-            var result = friends[i];
-            console.log(result);
-            if (result === friend_user_id) {
-              callback(error, result);
+            var res = friends[i];
+            if (res.user_id === friend_user_id) {
+              callback(error, res);
               return;
             }
           }
           callback(util.format("%s is not a friend of %s.", friend_user_id, user_id), null);
+        } else {
+          callback(util.format('User "%s" does not have any friends.', user_id));
         }
       });
     }
@@ -63,9 +68,6 @@ editFunction = function(operation) {
       if (error) {
         callback(error)
       } else {
-        if( typeof(friends.length)=="undefined") {
-          friends = [friends];
-        }
         updates = {};
         updates[operation] = {"friends": friends};
         friend_collection.update({"user_id":user_id}, updates, {"upsert":true}, function() {

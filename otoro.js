@@ -177,28 +177,27 @@ app.post('/friends/:user_id/:friend_user_id', function(request, response) {
         if (error || results.length == 0) {
           sendResponse(response, util.format('User "%s" was not found.', friend_user_id), null);
         } else {
-          friendProvider.save(user_id, friend_user_id, function(error, friends) {
-          if (error) {
-            sendResponse(response, error, null);
-          } else {
-            friendProvider.save(request.params.friend_user_id, request.params.user_id, function(error) {
-              sendResponse(response, error, friends);
-            });
-          }
-        });
+          friendProvider.save(user_id, {"user_id": friend_user_id, "blocked": false}, function(error, friends) {
+            if (error) {
+              sendResponse(response, error, null);
+            } else {
+              friendProvider.save(friend_user_id, {"user_id": user_id, "blocked": false}, function(error) {
+                sendResponse(response, error, friends);
+              });
+            }
+          });
         }
       });
     }
   });
-
 });
 
 app.del('/friends/:user_id/:friend_user_id', function(request, response) {
-  friendProvider.remove(request.params.user_id, request.params.friend_user_id, function(error, friends) {
+  friendProvider.remove(request.params.user_id, {"user_id": request.params.friend_user_id}, function(error, friends) {
     if (error) {
       sendResponse(response, error, null);
     } else {
-      friendProvider.remove(request.params.friend_user_id, request.params.user_id, function(error) {
+      friendProvider.remove(request.params.friend_user_id, {"user_id": request.params.user_id}, function(error) {
         sendResponse(response, error, friends);
       });
     }
