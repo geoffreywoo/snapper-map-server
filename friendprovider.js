@@ -61,12 +61,14 @@ editFunction = function(operation) {
   return function(user_id, friends, callback) {
     this.dbProvider.getCollection('Friends', function(error, friend_collection) {
       if (error) {
-        callback(error);
+        callback(error)
       } else {
-        if(typeof(friends.length) == "undefined") {
+        if( typeof(friends.length)=="undefined") {
           friends = [friends];
         }
-        friend_collection.update({"user_id":user_id}, {"friends": friends}, {"upsert":true}, function() {
+        updates = {};
+        updates[operation] = {"friends": friends};
+        friend_collection.update({"user_id":user_id}, updates, {"upsert":true}, function() {
           callback(null, friends);
         });
       }
