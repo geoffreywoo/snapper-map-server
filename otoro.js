@@ -110,6 +110,12 @@ app.put('/users/update/:user_id', function(request, response) {
   });
 });
 
+app.post('/users/address_book', function(request, response) {
+  userProvider.addressBookMatch(request.body.phones, request.body.emails, function(error, docs) {
+    sendResponse(response, error, docs);
+  });
+});
+
 app.get('/toros', function(request, response) {
   toroProvider.findAll(function (error, docs) {
     sendResponse(response, error, docs);
