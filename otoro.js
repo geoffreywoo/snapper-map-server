@@ -123,17 +123,46 @@ app.get('/toros', function(request, response) {
 });
 
 app.post('/toros/new', function(request, response) {
-  toroProvider.save({
-    latitude: request.body.latitude,
-    longitude: request.body.longitude,
-    sender: request.body.sender,
-    receiver: request.body.receiver,
-    message: request.body.message,
-    venue: request.body.venue,
-    read:false
-  }, function(error, docs) {
-    sendResponse(response, error, docs);
-  });
+  var latitude = request.body.latitude;
+  var longitude = request.body.longitude;
+  var sender = request.body.sender;
+  var receiver = request.body.receiver;
+  console.log(util.format("latitude is: ", latitude));
+  if (latitude && longitude && sender && receiver) {
+    if (latitude >= -180 && latitude <= 180 && longitude >= -90 && longitude <= 90) {
+      userProvider.findOneByUsername(sender, function(error, result) {
+        if (error) {
+          sendResponse(response, error);
+        } else if (result) {
+          userProvider.findOneByUsername(receiver, function(error, result) {
+            if (error) {
+              sendResponse(response, error);
+            } else if (result) {
+              toroProvider.save({
+                latitude: latitude,
+                longitude: longitude,
+                sender: sender,
+                receiver: receiver,
+                message: request.body.message,
+                venue: request.body.venue,
+                read:false
+              }, function(error, docs) {
+                sendResponse(response, error, docs);
+              });
+            } else {
+              sendResponse(response, util.format("User %s does not exist.", receiver));
+            }
+          });
+        } else {
+          sendResponse(response, util.format("User %s doesn't exist.", sender));
+        }
+      });
+    } else {
+      sendResponse(response, "Latitude or Longitude is out of range.");
+    }
+  } else {
+    sendResponse(response, "Request missing one of required attributes: latitude, longitude, sender or receiver.");
+  }
 });
 
 app.get('/toros/received/:user_id', function(request, response) {

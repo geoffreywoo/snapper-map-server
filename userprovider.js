@@ -49,12 +49,31 @@ UserProvider.prototype.findAll = function(callback) {
   });
 };
 
+UserProvider.prototype.findOneByUsername = function (username, callback) {
+  this.dbProvider.getCollection('Users', function (error, user_collection) {
+    if (error) {
+      callback(error);
+    } else {
+      user_collection.findOne({"_id":username}, function(error, result) {
+        if(error) {
+          callback(error);
+        } else if (result) {
+          callback(null, result);
+        } else {
+          user_collection.findOne({"username":username}, function(error, result) {
+            callback(null, result);
+          });
+        }
+      });
+    }
+  });
+}
+
 //find by username
 UserProvider.prototype.findByUsername = function(username, callback) {
-  this.dbProvider.getCollection('Users', function(error, user_collection) {
+  this.dbProvider.getCollection('Users', function (error, user_collection) {
     if(error) callback(error);
     else {
-      console.log(username);
       user_collection.find({"_id":username}).toArray(function(error, results) {
         if(error) callback(error);
         else if (results.length > 0) {
