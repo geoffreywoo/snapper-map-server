@@ -178,7 +178,11 @@ app.get('/toros/sent/:user_id', function(request, response) {
 });
 
 app.put('/toros/set_read/:toro_id', function(request, response) {
-  toroProvider.update(request.params.toro_id, {"read":request.body.read}, function(error) {
+  var read = request.body.read;
+  if (read === null || read === undefined) { // Setting read without parameters sets read to true.
+    read = true;
+  }
+  toroProvider.update(request.params.toro_id, {"read":read}, function(error) {
     sendResponse(response, error, null);
   });
 });
