@@ -166,14 +166,40 @@ app.post('/toros/new', function(request, response) {
 });
 
 app.get('/toros/received/:user_id', function(request, response) {
-  toroProvider.findByReceiver(request.params.user_id, function(error, docs) {
+  toroProvider.findByReceiver(request.params.user_id, function (error, docs) {
     sendResponse(response, error, docs);
   });
 });
 
 app.get('/toros/sent/:user_id', function(request, response) {
-  toroProvider.findBySender(request.params.user_id, function(error, docs) {
+  toroProvider.findBySender(request.params.user_id, function (error, docs) {
     sendResponse(response, error, docs);
+  });
+});
+
+app.get('/toros/:user_id', function(request, response) {
+  var username = request.params.user_id;
+  userProvider.findOneByUsername(username, function (error, result) {
+    if (error) {
+      sendResponse(response, error);
+    } else if (result) {
+      toroProvider.findByReceiver(username, function (error, usersByReceiver) {
+        if (error) {
+          sendResponse(response, error);
+        } else {
+          toroProvider.findBySender(username, function (error, usersBySender) {
+            if (error) {
+              sendResponse(response, error);
+            } else {
+              var ret = usersByReceiver.concat(usersBySender);
+              sendResponse(response, null, ret);
+            }
+          });
+        }
+      })
+    } else {
+      sendResponse(util.format('User "%s" does not exist.', username));
+    }
   });
 });
 
