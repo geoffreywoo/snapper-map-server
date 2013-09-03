@@ -129,7 +129,7 @@ app.post('/toros/new', function(request, response) {
   var receiver = request.body.receiver;
   console.log(util.format("latitude is: ", latitude));
   if (latitude && longitude && sender && receiver) {
-    if (latitude >= -180 && latitude <= 180 && longitude >= -90 && longitude <= 90) {
+    if (latitude >= -90.0 && latitude <= 90.0 && longitude >= -180.0 && longitude <= 180.0) {
       userProvider.findOneByUsername(sender, function(error, result) {
         if (error) {
           sendResponse(response, error);
