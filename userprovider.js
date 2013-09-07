@@ -4,15 +4,7 @@ var mongo = require('mongodb'),
     Server = mongo.Server,
     BSON = mongo.BSON,
     ObjectID = mongo.ObjectID,
-    MongoURI = require('mongo-uri'),
-    util = require('util'),
-    DBProvider = require('./dbprovider').DBProvider;
-
-var mongoUri = process.env.MONGOHQ_URL ||
-  process.env.MONGOLAB_URI ||
-  'mongodb://localhost:27017/node-mongo-User';
-
-var mongoParsedUri = MongoURI.parse(mongoUri);
+    util = require('util');
 
 UserProvider = function() {
   this.dbProvider = new DBProvider();
