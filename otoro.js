@@ -80,7 +80,7 @@ app.post('/users/new', function(request, response) {
         if (error) {
           sendResponse(response, error, null);
         } else if (existing_users.length > 0) {
-          sendResponse(response util.format('Email "%s" already exists.', email), null);
+          sendResponse(response, util.format('Email "%s" already exists.', email), null);
         } else {
           userProvider.save({
             username: username,
