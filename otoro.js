@@ -73,15 +73,24 @@ app.post('/users/new', function(request, response) {
     if (error) {
       sendResponse(response, error, null);
     } else if (existing_users.length > 0) {
-      sendResponse(response, util.format('User "%s" already exists.', username), null)
+      sendResponse(response, util.format('User "%s" already exists.', username), null);
     } else {
-      userProvider.save({
-        username: request.body.username,
-        password: request.body.password,
-        email: request.body.email,
-        phone: request.body.phone
-      }, function(error, docs) {
-        sendResponse(response, error, docs);
+      var email = request.body.email;
+      userProvider.findByEmail(email, function (error, existing_users) {
+        if (error) {
+          sendResponse(response, error, null);
+        } else if (existing_users.length > 0) {
+          sendResponse(response util.format('Email "%s" already exists.', email), null);
+        } else {
+          userProvider.save({
+            username: username,
+            password: request.body.password,
+            email: email,
+            phone: request.body.phone
+          }, function(error, docs) {
+            sendResponse(response, error, docs);
+          });
+        }
       });
     }
   });
