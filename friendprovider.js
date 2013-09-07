@@ -6,12 +6,6 @@ var Db = require('mongodb').Db;
     MongoURI = require('mongo-uri'),
     util = require('util');
 
-var mongoUri = process.env.MONGOHQ_URL ||
-  process.env.MONGOLAB_URI ||
-  'mongodb://localhost:27017/node-mongo-User';
-
-var mongoParsedUri = MongoURI.parse(mongoUri);
-
 FriendProvider = function() {
   this.dbProvider = new DBProvider();
 };

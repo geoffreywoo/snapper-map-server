@@ -1,18 +1,10 @@
 var mongo = require('mongodb'),
     Db = mongo.Db,
     Connection = mongo.Connection,
-    Server = mongo.Server,
     BSON = mongo.BSON,
     ObjectID = require('mongodb').ObjectID,
     util = require('util'),
-    MongoURI = require('mongo-uri'),
-    MongoClient = mongo.MongoClient;
-
-var mongoUri = process.env.MONGOHQ_URL ||
-  process.env.MONGOLAB_URI ||
-  'mongodb://localhost:27017/node-mongo-User';
-
-var mongoParsedUri = MongoURI.parse(mongoUri);
+    DBProvider = require('./dbprovider').DBProvider;
 
 ToroProvider = function() {
   this.dbProvider = new DBProvider();
