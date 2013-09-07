@@ -68,11 +68,12 @@ app.post('/login', function(request, response) {
 });
 
 app.post('/users/new', function(request, response) {
-  userProvider.findByUsername(request.body.username, function (error, existing_users) {
+  var username = request.body.username;
+  userProvider.findByUsername(username, function (error, existing_users) {
     if (error) {
       sendResponse(response, error, null);
     } else if (existing_users.length > 0) {
-      sendResponse(response, util.format('User "%s" already exists.'), null)
+      sendResponse(response, util.format('User "%s" already exists.', username), null)
     } else {
       userProvider.save({
         username: request.body.username,
