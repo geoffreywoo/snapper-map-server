@@ -7,6 +7,7 @@ var express = require("express"),
     UserProvider = require('./userprovider').UserProvider,
     ToroProvider = require('./toroprovider').ToroProvider;
     FriendProvider = require('./friendprovider').FriendProvider,
+    AddressbookProvider = require('./addressbookprovider').AddressbookProvider;
 
 app.use(express.logger());
 app.use(express.bodyParser());
@@ -22,6 +23,7 @@ app.configure('production', function() {
 var userProvider = new UserProvider();
 var toroProvider = new ToroProvider();
 var friendProvider = new FriendProvider();
+var addressbookProvider = new AddressbookProvider();
 
 // only called when its 200
 var sendResponse = function (response, error, data) {
@@ -58,7 +60,9 @@ app.post('/login', function(request, response) {
     } else {
       for (var i = 0; i < existing_users.length; i++) {
         if (request.body.password == existing_users[i].password) {
-          sendResponse(response, null, existing_users[i]);
+          user = existing_users[i];
+          user['password'] = '';
+          sendResponse(response, null, user);
           return;
         }
       }
@@ -123,6 +127,36 @@ app.put('/users/update/:user_id', function(request, response) {
 app.post('/users/address_book', function(request, response) {
   userProvider.addressBookMatch(request.body.phones, request.body.emails, function(error, docs) {
     sendResponse(response, error, docs);
+  });
+});
+
+app.get('/addressbooks/:username', function(request, response) {
+  var username = request.params.username;
+  userProvider.findByUsername(username, function (error, existing_users) {
+    if (error) {
+      sendResponse(response, error, null);
+    } else if (existing_users.length == 0) {
+      sendResponse(response, util.format('User "%s" does not exist', username), null);
+    } else {
+      addressbookProvider.findByUsername(username, function(error, results) {
+        sendResponse(response, error, results);
+      });
+    }
+  });
+});
+
+app.post('/addressbooks/upload', function(request, response) {
+  var username = request.body.username;
+  userProvider.findByUsername(username, function (error, existing_users) {
+    if (error) {
+      sendResponse(response, error, null);
+    } else if (existing_users.length == 0) {
+      sendResponse(response, util.format('User "%s" does not exist', username), null);
+    } else {
+      addressbookProvider.save(request.body, function(error, results) {
+        sendResponse(response, error, results);
+      });
+    }
   });
 });
 
