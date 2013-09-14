@@ -85,25 +85,25 @@ UserProvider.prototype.findByEmail = function (email, callback) {
 
 //save new User
 UserProvider.prototype.save = function (users, callback) {
-    this.dbProvider.getCollection('Users', function (error, user_collection) {
-      if (error) {
-        callback(error);
+  this.dbProvider.getCollection('Users', function (error, user_collection) {
+    if (error) {
+      callback(error);
+    }
+    else {
+      if(typeof(users.length) == "undefined") {
+        users = [users];
       }
-      else {
-        if(typeof(users.length) == "undefined") {
-          users = [users];
-        }
-        for (var i = 0; i< users.length; i++) {
-          user = users[i];
-          user["_id"] = user.username;
-          user.created_at = new Date().getTime();
-          user["phone"] = userUtils.normalizePhone(user["phone"]);
-        }
-        user_collection.insert(users, function() {
-          callback(null, users);
-        });
+      for (var i = 0; i< users.length; i++) {
+        user = users[i];
+        user["_id"] = user.username;
+        user.created_at = new Date().getTime();
+        user["phone"] = userUtils.normalizePhone(user["phone"]);
       }
-    });
+      user_collection.insert(users, function() {
+        callback(null, users);
+      });
+    }
+  });
 };
 
 // address book auto-friending
@@ -156,7 +156,6 @@ UserProvider.prototype.remove = function(user_id, callback) {
           user_collection.remove({"_id":user_id}, function(error) {
             callback(error);
           });
-
         }
       });
     }
