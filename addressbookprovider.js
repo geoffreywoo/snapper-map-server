@@ -5,7 +5,7 @@ var Db = require('mongodb').Db;
     ObjectID = require('mongodb').ObjectID,
     MongoURI = require('mongo-uri'),
     util = require('util'),
-    user_utils = require('./user_utils');
+    userUtils = require('./user_utils');
 
 AddressbookProvider = function() {
   this.dbProvider = new DBProvider();
@@ -47,7 +47,7 @@ AddressbookProvider.prototype.save = function (address_books, callback) {
           address_book.timestamp = new Date();
           var phones = address_book.contacts["phone"]
           for (var i = 0; i < phones; i++) {
-            phones[i] = user_utils.normalizePhone(phones[i]);
+            phones[i] = userUtils.normalizePhone(phones[i]);
           }
         }
         addressbook_collection.insert(address_books, function() {
