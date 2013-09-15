@@ -189,6 +189,7 @@ app.post('/toros/new', function(request, response) {
                 receiver: receiver,
                 message: request.body.message,
                 venue: request.body.venue,
+                venueID: request.body.venueID,
                 read:false
               }, function(error, docs) {
                 sendResponse(response, error, docs);
