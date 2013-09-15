@@ -5,7 +5,8 @@ var express = require("express"),
     http = require('http'),
     path = require('path'),
     UserProvider = require('./userprovider').UserProvider,
-    ToroProvider = require('./toroprovider').ToroProvider;
+    ToroController = require('./torocontroller').ToroController,
+    ToroProvider = require('./toroprovider').ToroProvider,
     FriendProvider = require('./friendprovider').FriendProvider,
     AddressbookProvider = require('./addressbookprovider').AddressbookProvider;
 
@@ -22,6 +23,7 @@ app.configure('production', function() {
 
 var userProvider = new UserProvider();
 var toroProvider = new ToroProvider();
+var toroController = new ToroController();
 var friendProvider = new FriendProvider();
 var addressbookProvider = new AddressbookProvider();
 
@@ -210,41 +212,21 @@ app.post('/toros/new', function(request, response) {
   }
 });
 
-app.get('/toros/received/:user_id', function(request, response) {
-  toroProvider.findByReceiver(request.params.user_id, function (error, docs) {
+app.get('/toros/received/:user_id', function (request, response) {
+  toroController.findByReceiver(request.params.user_id, function (error, docs) {
     sendResponse(response, error, docs);
   });
 });
 
-app.get('/toros/sent/:user_id', function(request, response) {
-  toroProvider.findBySender(request.params.user_id, function (error, docs) {
-    sendResponse(response, error, docs);
+app.get('/toros/sent/:user_id', function (request, response) {
+  toroController.findBySender(request.params.user_id, function (error, toros) {
+    sendResponse(response, error, toros);
   });
 });
 
 app.get('/toros/:user_id', function(request, response) {
-  var username = request.params.user_id;
-  userProvider.findOneByUsername(username, function (error, result) {
-    if (error) {
-      sendResponse(response, error);
-    } else if (result) {
-      toroProvider.findByReceiver(username, function (error, usersByReceiver) {
-        if (error) {
-          sendResponse(response, error);
-        } else {
-          toroProvider.findBySender(username, function (error, usersBySender) {
-            if (error) {
-              sendResponse(response, error);
-            } else {
-              var ret = usersByReceiver.concat(usersBySender);
-              sendResponse(response, null, ret);
-            }
-          });
-        }
-      })
-    } else {
-      sendResponse(util.format('User "%s" does not exist.', username));
-    }
+  toroController.findBySenderOrReceiver(request.params.user_id, function (error, toros) {
+    sendResponse(response, error, toros);
   });
 });
 

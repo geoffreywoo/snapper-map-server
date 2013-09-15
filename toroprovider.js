@@ -10,32 +10,27 @@ ToroProvider = function() {
   this.dbProvider = new DBProvider();
 };
 
-ToroProvider.prototype.findByReceiver = function(id, callback) {
+ToroProvider.prototype.find = function(query, options, callback) {
   this.dbProvider.getCollection('Toros', function(error, toro_collection) {
-    if ( error ) callback(error);
-    else {
-      toro_collection.find({'receiver': id}).toArray(function(error, results) {
-        if ( error ) callback(error);
-        else {
-          callback(null, results);
-        }
-      });
-    }
+    toro_collection.find(query, options).toArray(function(error, results) {
+      if ( error ) callback(error);
+      else {
+        callback(null, results);
+      }
+    });
   });
+}
+
+ToroProvider.prototype.findByReceiver = function(username, callback, sort) {
+  this.find({'receiver': username}, {'sort': sort}, callback);
 };
 
-ToroProvider.prototype.findBySender = function(id, callback) {
-  this.dbProvider.getCollection('Toros', function(error, toro_collection) {
-    if ( error ) callback(error);
-    else {
-      toro_collection.find({'sender': id}).toArray(function(error, results) {
-        if ( error ) callback(error);
-        else {
-          callback(null, results);
-        }
-      });
-    }
-  });
+ToroProvider.prototype.findBySender = function(username, callback, sort) {
+  this.find({'sender': username}, {'sort': sort}, callback);
+};
+
+ToroProvider.prototype.findBySenderOrReceiver = function(username, callback, sort) {
+  this.find({'$or': [{'sender': username}, {'receiver': username}]}, {'sort': sort}, callback);
 };
 
 //find all toros

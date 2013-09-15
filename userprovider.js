@@ -96,7 +96,7 @@ UserProvider.prototype.save = function (users, callback) {
       for (var i = 0; i< users.length; i++) {
         user = users[i];
         user["_id"] = user.username;
-        user.created_at = new Date().getTime();
+        user.created_at = new Date();
         user["phone"] = userUtils.normalizePhone(user["phone"]);
       }
       user_collection.insert(users, function() {
