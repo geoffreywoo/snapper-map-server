@@ -5,6 +5,8 @@ var express = require("express"),
     http = require('http'),
     path = require('path'),
     UserProvider = require('./userprovider').UserProvider,
+    UserController = require('./controllers/user-controller').UserController,
+    PushController = require('./controllers/push-controller').PushController,
     ToroController = require('./torocontroller').ToroController,
     ToroProvider = require('./toroprovider').ToroProvider,
     FriendProvider = require('./friendprovider').FriendProvider,
@@ -26,6 +28,8 @@ var toroProvider = new ToroProvider();
 var toroController = new ToroController();
 var friendProvider = new FriendProvider();
 var addressbookProvider = new AddressbookProvider();
+var userController = new UserController();
+var pushController = new PushController();
 
 // only called when its 200
 var sendResponse = function (response, error, data) {
@@ -75,31 +79,34 @@ app.post('/login', function(request, response) {
 
 app.post('/users/new', function(request, response) {
   var username = request.body.username;
-  userProvider.findByUsername(username, function (error, existing_users) {
-    if (error) {
-      sendResponse(response, error, null);
-    } else if (existing_users.length > 0) {
-      sendResponse(response, util.format('User "%s" already exists.', username), null);
-    } else {
-      var email = request.body.email;
-      userProvider.findByEmail(email, function (error, existing_users) {
-        if (error) {
-          sendResponse(response, error, null);
-        } else if (existing_users.length > 0) {
-          sendResponse(response, util.format('Email "%s" already exists.', email), null);
-        } else {
-          userProvider.save({
-            username: username,
-            password: request.body.password,
-            email: email,
-            phone: request.body.phone
-          }, function(error, docs) {
-            sendResponse(response, error, docs);
-          });
-        }
-      });
-    }
-  });
+  if (username) {
+    username = username.toLowerCase();
+    userProvider.findByUsername(username, function (error, existing_users) {
+      if (error) {
+        sendResponse(response, error, null);
+      } else if (existing_users.length > 0) {
+        sendResponse(response, util.format('User "%s" already exists.', username), null);
+      } else {
+        var email = request.body.email;
+        userProvider.findByEmail(email, function (error, existing_users) {
+          if (error) {
+            sendResponse(response, error, null);
+          } else if (existing_users.length > 0) {
+            sendResponse(response, util.format('Email "%s" already exists.', email), null);
+          } else {
+            userProvider.save({
+              username: username,
+              password: request.body.password,
+              email: email,
+              phone: request.body.phone
+            }, function(error, docs) {
+              sendResponse(response, error, docs);
+            });
+          }
+        });
+      }
+    });
+  }
 });
 
 app.get('/users', function(request, response) {
@@ -129,6 +136,18 @@ app.put('/users/update/:user_id', function(request, response) {
 app.post('/users/address_book', function(request, response) {
   userProvider.addressBookMatch(request.body.phones, request.body.emails, function(error, docs) {
     sendResponse(response, error, docs);
+  });
+});
+
+app.put('/users/device_token/:username/:device_token', function(request, response) {
+  userController.registerDeviceToken(request.params.username, request.params.device_token, function (error) {
+    sendResponse(response, error, null);
+  });
+});
+
+app.del('/users/device_token/:username/:device_token', function(request, response) {
+  userController.unregisterDeviceToken(request.params.username, request.params.device_token, function (error) {
+    sendResponse(response, error, null);
   });
 });
 
@@ -194,6 +213,9 @@ app.post('/toros/new', function(request, response) {
                 venueID: request.body.venueID,
                 read:false
               }, function(error, docs) {
+                if (!error) {
+                  pushController.sendNotification(receiver, util.format('Snapper from %s'), function() {});
+                }
                 sendResponse(response, error, docs);
               });
             } else {
