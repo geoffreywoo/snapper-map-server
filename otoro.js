@@ -59,21 +59,22 @@ app.get('/', function(request, response) {
 });
 
 app.post('/login', function(request, response) {
-  userProvider.findByUsername(request.body.username, function (error, existing_users) {
+  var username = request.body.username;
+  userProvider.findByUsername(username, function (error, existing_users) {
     if (error) {
       sendResponse(response, error, null);
     } else if (existing_users.length === 0) {
-      sendResponse(response, util.format('User "%s" not found.', request.body.username), null);
+      sendResponse(response, util.format('User "%s" not found.', username), null);
     } else {
       for (var i = 0; i < existing_users.length; i++) {
         if (request.body.password == existing_users[i].password) {
           user = existing_users[i];
           user['password'] = '';
+          userController.resetBadgeCount(username);
           sendResponse(response, null, user);
           return;
         }
       }
-      userController.resetBadgeCount(username);
       sendResponse(response, 'Password did not match.', null);
     }
   });
@@ -261,7 +262,12 @@ app.put('/toros/set_read/:toro_id', function(request, response) {
   }
   var toro_id = request.params.toro_id;
   toroProvider.update(toro_id, {"read":read}, function(error) {
-    userController.resetBadgeCount(username);
+    toroProvider.find({'_id': ObjectID(toro_id)}, {'sort': {'created_at': -1}}, function(error, result) {
+      if (!error && read && result && result.length > 0 && result[0].receiver) {
+        receiver = result[0].receiver;
+        userController.resetBadgeCount(receiver);
+      }
+    });
     sendResponse(response, error, null);
   });
 });

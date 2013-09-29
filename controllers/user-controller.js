@@ -1,10 +1,16 @@
 var https = require('https'),
-    util = require('util');
+    util = require('util'),
+    PushController = require('./push-controller').PushController,
+    ToroProvider = require('../toroprovider').ToroProvider;
 
 var urban_airship_host = 'go.urbanairship.com';
 var urban_airship_appkey = '6w6o7r7RQue9QAbyg6tN2Q';
 var urban_airship_appsecret = 'gd_o2UPsQMGzxXQ3sktDWw';
 var urban_airship_mastersecret = 'E2xaw_GMTUWaTUXY_PlD3A';
+
+var toroProvider = new ToroProvider();
+var pushController = new PushController();
+
 UserController = function() {
 };
 
@@ -54,14 +60,9 @@ UserController.prototype.unregisterDeviceToken = function(username, device_token
 }
 
 UserController.prototype.resetBadgeCount = function(username) {
-  toroProvider.find({'_id': ObjectID(toro_id)}, {}, function(error, result) {
-    if (!error && read && result && result.length > 0 && result[0].receiver) {
-      receiver = result[0].receiver;
-      toroProvider.findByReceiverUnread(receiver, function(error, toros) {
-        if (!error) {
-          pushController.setBadgeCount(receiver, toros.length, function() {});
-        }
-      });
+  toroProvider.findByReceiverUnread(username, function(error, toros) {
+    if (!error) {
+      pushController.setBadgeCount(username, toros.length, function() {});
     }
   });
 }
