@@ -21,8 +21,10 @@ var makePushRequest = function(body, callback) {
     },
     auth: util.format('%s:%s', urban_airship_appkey, urban_airship_mastersecret)
   };
+  console.log('hi');
   var request = https.request(options, function(response) {
     var statusCode = response.statusCode;
+    console.log('eh');
     console.log(util.format('responseCode: %d', statusCode));
     if (statusCode >= 200 && statusCode <= 203) {
       callback(null);
@@ -30,6 +32,7 @@ var makePushRequest = function(body, callback) {
       callback(util.format('Airship response code was: %d', statusCode));
     }
   });
+  console.log('aaa');
   request.write(request_body);
   request.on('error', function (error) {
     callback(error);

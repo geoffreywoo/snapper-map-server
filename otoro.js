@@ -195,42 +195,45 @@ app.post('/toros/new', function(request, response) {
   var longitude = request.body.longitude;
   var sender = request.body.sender;
   var receiver = request.body.receiver;
-  console.log(util.format("latitude is: ", latitude));
   if (latitude && longitude && sender && receiver) {
-    if (latitude >= -90.0 && latitude <= 90.0 && longitude >= -180.0 && longitude <= 180.0) {
-      userProvider.findOneByUsername(sender, function(error, result) {
-        if (error) {
-          sendResponse(response, error);
-        } else if (result) {
-          userProvider.findOneByUsername(receiver, function(error, result) {
-            if (error) {
-              sendResponse(response, error);
-            } else if (result) {
-              toroProvider.save({
-                latitude: latitude,
-                longitude: longitude,
-                sender: sender,
-                receiver: receiver,
-                message: request.body.message,
-                venue: request.body.venue,
-                venueID: request.body.venueID,
-                read:false
-              }, function(error, docs) {
-                if (!error) {
-                  pushController.sendNotification(receiver, util.format('from %s', sender), function() {});
-                }
-                sendResponse(response, error, docs);
-              });
-            } else {
-              sendResponse(response, util.format("User %s does not exist.", receiver));
-            }
-          });
-        } else {
-          sendResponse(response, util.format("User %s doesn't exist.", sender));
-        }
-      });
+    if (sender === receiver) {
+      sendResponse(response, 'You cannot send a snapper to yourself.', null);
     } else {
-      sendResponse(response, "Latitude or Longitude is out of range.");
+      if (latitude >= -90.0 && latitude <= 90.0 && longitude >= -180.0 && longitude <= 180.0) {
+        userProvider.findOneByUsername(sender, function(error, result) {
+          if (error) {
+            sendResponse(response, error);
+          } else if (result) {
+            userProvider.findOneByUsername(receiver, function(error, result) {
+              if (error) {
+                sendResponse(response, error);
+              } else if (result) {
+                toroProvider.save({
+                  latitude: latitude,
+                  longitude: longitude,
+                  sender: sender,
+                  receiver: receiver,
+                  message: request.body.message,
+                  venue: request.body.venue,
+                  venueID: request.body.venueID,
+                  read:false
+                }, function(error, docs) {
+                  if (!error) {
+                    pushController.sendNotification(receiver, util.format('from %s', sender), function() {});
+                  }
+                  sendResponse(response, error, docs);
+                });
+              } else {
+                sendResponse(response, util.format("User %s does not exist.", receiver));
+              }
+            });
+          } else {
+            sendResponse(response, util.format("User %s doesn't exist.", sender));
+          }
+        });
+      } else {
+        sendResponse(response, "Latitude or Longitude is out of range.");
+      }
     }
   } else {
     sendResponse(response, "Request missing one of required attributes: latitude, longitude, sender or receiver.");
@@ -262,9 +265,10 @@ app.put('/toros/set_read/:toro_id', function(request, response) {
   }
   var toro_id = request.params.toro_id;
   toroProvider.update(toro_id, {"read":read}, function(error) {
-    toroProvider.find({'_id': ObjectID(toro_id)}, {'sort': {'created_at': -1}}, function(error, result) {
+    toroProvider.find({'_id': ObjectID(toro_id)}, {}, function(error, result) {
       if (!error && read && result && result.length > 0 && result[0].receiver) {
         receiver = result[0].receiver;
+        console.log(util.format('receiver: %s', receiver));
         userController.resetBadgeCount(receiver);
       }
     });
