@@ -214,7 +214,7 @@ app.post('/toros/new', function(request, response) {
                 read:false
               }, function(error, docs) {
                 if (!error) {
-                  pushController.sendNotification(receiver, util.format('Snapper from %s'), function() {});
+                  pushController.sendNotification(receiver, util.format('from %s', sender), function() {});
                 }
                 sendResponse(response, error, docs);
               });

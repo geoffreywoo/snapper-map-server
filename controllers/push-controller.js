@@ -31,6 +31,7 @@ PushController.prototype.sendNotification = function(username, message, callback
   };
   var request = https.request(options, function(response) {
     var statusCode = response.statusCode;
+    console.log(util.format('responseCode: %d', statusCode));
     if (statusCode >= 200 && statusCode <= 203) {
       callback(null);
     } else {
