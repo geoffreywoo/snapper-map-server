@@ -29,6 +29,10 @@ ToroProvider.prototype.findBySender = function(username, callback, sort) {
   this.find({'sender': username}, {'sort': sort}, callback);
 };
 
+ToroProvider.prototype.findByReceiverUnread = function(username, callback) {
+  this.find({'receiver': username, 'read': false}, {}, callback);
+}
+
 ToroProvider.prototype.findBySenderOrReceiver = function(username, callback, sort) {
   this.find({'$or': [{'sender': username}, {'receiver': username}]}, {'sort': sort}, callback);
 };

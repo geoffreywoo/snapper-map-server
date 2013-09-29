@@ -4,6 +4,7 @@ var express = require("express"),
     util = require('util'),
     http = require('http'),
     path = require('path'),
+    ObjectID = require('mongodb').ObjectID,
     UserProvider = require('./userprovider').UserProvider,
     UserController = require('./controllers/user-controller').UserController,
     PushController = require('./controllers/push-controller').PushController,
@@ -257,7 +258,18 @@ app.put('/toros/set_read/:toro_id', function(request, response) {
   if (read === null || read === undefined) { // Setting read without parameters sets read to true.
     read = true;
   }
-  toroProvider.update(request.params.toro_id, {"read":read}, function(error) {
+  var toro_id = request.params.toro_id;
+  toroProvider.update(toro_id, {"read":read}, function(error) {
+    toroProvider.find({'_id': ObjectID(toro_id)}, {'sort': {'created_at': -1}}, function(error, result) {
+      if (!error && read && result && result.length > 0 && result[0].receiver) {
+        receiver = result[0].receiver;
+        toroProvider.findByReceiverUnread(receiver, function(error, toros) {
+          if (!error) {
+            pushController.setBadgeCount(receiver, toros.length, function() {});
+          }
+        });
+      }
+    });
     sendResponse(response, error, null);
   });
 });

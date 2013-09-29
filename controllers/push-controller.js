@@ -8,23 +8,15 @@ var urban_airship_mastersecret = 'E2xaw_GMTUWaTUXY_PlD3A';
 PushController = function() {
 };
 
-PushController.prototype.sendNotification = function(username, message, callback) {
-  var post_body = JSON.stringify({
-    'audience': {
-      'alias': username
-    },
-    'notification': {
-      'alert': message,
-    },
-    'device_types': ['ios']
-  });
+var makePushRequest = function(body, callback) {
+  var request_body = JSON.stringify(body);
   var options = {
     hostname: urban_airship_host,
     path: util.format('/api/push/'),
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Content-Length': post_body.length,
+      'Content-Length': request_body.length,
       'Accept': 'application/vnd.urbanairship+json; version=3;'
     },
     auth: util.format('%s:%s', urban_airship_appkey, urban_airship_mastersecret)
@@ -38,11 +30,42 @@ PushController.prototype.sendNotification = function(username, message, callback
       callback(util.format('Airship response code was: %d', statusCode));
     }
   });
-  request.write(post_body);
+  request.write(request_body);
   request.on('error', function (error) {
     callback(error);
   });
   request.end();
+}
+
+PushController.prototype.setBadgeCount = function(username, count, callback) {
+  console.log(util.format('count is: %d', count));
+  makePushRequest({
+    'audience': {
+      'alias': username
+    },
+    'notification': {
+      'ios': {
+        'badge': count,
+      }
+    },
+    'device_types': ['ios']
+  }, callback);
+}
+
+PushController.prototype.sendNotification = function(username, message, callback) {
+  makePushRequest({
+    'audience': {
+      'alias': username
+    },
+    'notification': {
+      'ios': {
+        'badge': '+1',
+        'alert': message,
+        'sound': 'default'
+      }
+    },
+    'device_types': ['ios']
+  }, callback);
 }
 
 exports.PushController = PushController
