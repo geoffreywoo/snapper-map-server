@@ -280,30 +280,38 @@ app.get('/friends/:user_id/:friend_user_id', function(request, response) {
   });
 });
 
-app.post('/friends/:user_id/:friend_user_id', function(request, response) {
+app.put('/friends/:user_id/:friend_user_id', function(request, response) {
   var user_id = request.params.user_id;
   var friend_user_id = request.params.friend_user_id;
-  userProvider.findByUsername(user_id, function(error, results) {
-    if (error || results.length == 0) {
-      sendResponse(response, util.format('User "%s" was not found.', user_id), null);
+  if (user_id && friend_user_id) {
+    if (user_id === friend_user_id) {
+      sendResponse(response, util.format('User "%s" cannot add self as friend.', user_id));
     } else {
-      userProvider.findByUsername(friend_user_id, function(error, results) {
+      userProvider.findByUsername(user_id, function(error, results) {
         if (error || results.length == 0) {
-          sendResponse(response, util.format('User "%s" was not found.', friend_user_id), null);
+          sendResponse(response, util.format('User "%s" was not found.', user_id), null);
         } else {
-          friendProvider.save(user_id, {"user_id": friend_user_id, "blocked": false}, function(error, friends) {
-            if (error) {
-              sendResponse(response, error, null);
+          userProvider.findByUsername(friend_user_id, function(error, results) {
+            if (error || results.length == 0) {
+              sendResponse(response, util.format('User "%s" was not found.', friend_user_id), null);
             } else {
-              friendProvider.save(friend_user_id, {"user_id": user_id, "blocked": false}, function(error) {
-                sendResponse(response, error, friends);
+              friendProvider.save(user_id, {"user_id": friend_user_id, "blocked": false}, function(error, friends) {
+                if (error) {
+                  sendResponse(response, error, null);
+                } else {
+                  friendProvider.save(friend_user_id, {"user_id": user_id, "blocked": false}, function(error) {
+                    sendResponse(response, error, friends);
+                  });
+                }
               });
             }
           });
         }
       });
     }
-  });
+  } else {
+    sendResponse(response, util.format('Must pass in a valid user_id and friend_user_id parameter.'));
+  }
 });
 
 app.del('/friends/:user_id/:friend_user_id', function(request, response) {
