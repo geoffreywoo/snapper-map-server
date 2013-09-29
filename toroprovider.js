@@ -12,12 +12,17 @@ ToroProvider = function() {
 
 ToroProvider.prototype.find = function(query, options, callback) {
   this.dbProvider.getCollection('Toros', function(error, toro_collection) {
-    toro_collection.find(query, options).toArray(function(error, results) {
-      if ( error ) callback(error);
-      else {
-        callback(null, results);
-      }
-    });
+    if (error) {
+      callback(error);
+    } else {
+      toro_collection.find(query, options).toArray(function(error, results) {
+        if (error)  {
+          callback(error);
+        } else {
+          callback(null, results);
+        }
+      });
+    }
   });
 }
 

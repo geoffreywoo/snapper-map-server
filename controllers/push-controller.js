@@ -21,27 +21,40 @@ var makePushRequest = function(body, callback) {
     },
     auth: util.format('%s:%s', urban_airship_appkey, urban_airship_mastersecret)
   };
-  console.log('hi');
   var request = https.request(options, function(response) {
     var statusCode = response.statusCode;
-    console.log('eh');
-    console.log(util.format('responseCode: %d', statusCode));
     if (statusCode >= 200 && statusCode <= 203) {
-      callback(null);
+      response.on('data', function(chunk) {
+        callback(null, chunk);
+      });
     } else {
-      callback(util.format('Airship response code was: %d', statusCode));
+      response.on('data', function(chunk) {
+        callback(util.format('Airship response code was: %d', statusCode), chunk);
+      });
     }
   });
-  console.log('aaa');
   request.write(request_body);
   request.on('error', function (error) {
-    callback(error);
+    callback(error, null);
   });
   request.end();
 }
 
 PushController.prototype.setBadgeCount = function(username, count, callback) {
-  console.log(util.format('count is: %d', count));
+  makePushRequest({
+    'audience': {
+      'alias': username
+    },
+    'notification': {
+      'ios': {
+        'badge': count
+      }
+    },
+    'device_types': ['ios']
+  }, callback);
+}
+
+PushController.prototype.sendNotification = function(username, message, count, callback) {
   makePushRequest({
     'audience': {
       'alias': username
@@ -49,20 +62,6 @@ PushController.prototype.setBadgeCount = function(username, count, callback) {
     'notification': {
       'ios': {
         'badge': count,
-      }
-    },
-    'device_types': ['ios']
-  }, callback);
-}
-
-PushController.prototype.sendNotification = function(username, message, callback) {
-  makePushRequest({
-    'audience': {
-      'alias': username
-    },
-    'notification': {
-      'ios': {
-        'badge': '+1',
         'alert': message,
         'sound': 'default'
       }

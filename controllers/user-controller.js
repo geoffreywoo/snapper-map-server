@@ -59,10 +59,27 @@ UserController.prototype.unregisterDeviceToken = function(username, device_token
   request.end();
 }
 
-UserController.prototype.resetBadgeCount = function(username) {
+UserController.prototype.getBadgeCount = function(username, callback) {
   toroProvider.findByReceiverUnread(username, function(error, toros) {
-    if (!error) {
-      pushController.setBadgeCount(username, toros.length, function() {});
+    if (error) {
+      callback(error);
+    } else if (toros) {
+      callback(error, toros.length);
+    } else {
+      callback(util.format('Toros object could not be gotten for username %s', username));
+    }
+  });
+}
+
+UserController.prototype.resetBadgeCount = function(username, callback) {
+  this.getBadgeCount(username, function(error, count) {
+    if (error) {
+      callback('Could not get the correct badge count!', null);
+    } else {
+      console.log(util.format('Resetting badge count for user %s to: %d', username, count));
+      pushController.setBadgeCount(username, count, function(error, responseBody) {
+        callback(error, responseBody);
+      });
     }
   });
 }

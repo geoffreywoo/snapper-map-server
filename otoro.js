@@ -42,6 +42,8 @@ var sendResponse = function (response, error, data) {
       var elementsArray;
       if (data instanceof Array) {
         elementsArray = data;
+      } else if (typeof data === 'number') {
+        elementsArray = [data];
       } else {
         elementsArray = new Array(data);
       }
@@ -66,18 +68,38 @@ app.post('/login', function(request, response) {
     } else if (existing_users.length === 0) {
       sendResponse(response, util.format('User "%s" not found.', username), null);
     } else {
+      var user = null;
       for (var i = 0; i < existing_users.length; i++) {
         if (request.body.password == existing_users[i].password) {
           user = existing_users[i];
           user['password'] = '';
-          userController.resetBadgeCount(username);
-          sendResponse(response, null, user);
-          return;
+          break;
         }
       }
-      sendResponse(response, 'Password did not match.', null);
+      if (user) {
+        userController.resetBadgeCount(username, function (error, responseBody) {
+          if (error) {
+            console.log(error); // log error if badge count failed to reset.
+          }
+          sendResponse(response, null, user);
+        });
+      } else {
+        sendResponse(response, 'Password did not match.', null);
+      } 
     }
   });
+});
+
+app.post('/logout', function (request, response) {
+  var username = request.body.username;
+  var device_token = request.body.device_token;
+  if (device_token) {
+    userController.unregisterDeviceToken(username, device_token, function (error) {
+      sendResponse(response, error);
+    });
+  } else {
+    sendResponse(response, null, 'Successful');
+  }
 });
 
 app.post('/users/new', function(request, response) {
@@ -142,15 +164,27 @@ app.post('/users/address_book', function(request, response) {
   });
 });
 
-app.put('/users/device_token/:username/:device_token', function(request, response) {
+app.put('/users/device_token/:username/:device_token', function (request, response) {
   userController.registerDeviceToken(request.params.username, request.params.device_token, function (error) {
     sendResponse(response, error, null);
   });
 });
 
-app.del('/users/device_token/:username/:device_token', function(request, response) {
+app.del('/users/device_token/:username/:device_token', function (request, response) {
   userController.unregisterDeviceToken(request.params.username, request.params.device_token, function (error) {
     sendResponse(response, error, null);
+  });
+});
+
+app.get('/users/reset_badge_count/:username', function (request, response) {
+  userController.resetBadgeCount(request.params.username, function (error, responseBody) {
+    sendResponse(response, error, responseBody);
+  });
+});
+
+app.get('/users/get_badge_count/:username', function (request, response) {
+  userController.getBadgeCount(request.params.username, function (error, count) {
+    sendResponse(response, error, count);
   });
 });
 
@@ -218,10 +252,23 @@ app.post('/toros/new', function(request, response) {
                   venueID: request.body.venueID,
                   read:false
                 }, function(error, docs) {
-                  if (!error) {
-                    pushController.sendNotification(receiver, util.format('from %s', sender), function() {});
+                  if (error) {
+                    sendResponse(response, error);
+                  } else {
+                    userController.getBadgeCount(receiver, function (error, count) {
+                      if (error) {
+                        console.log(error);
+                        sendResponse(response, null, docs); // don't send error if getting badge count failed.
+                      } else {
+                        pushController.sendNotification(receiver, util.format('from %s', sender), count, function (error, responseBody) {
+                          if (error) {
+                            console.log(error);
+                          }
+                          sendResponse(response, null, docs); // don't send error if push failed.
+                        });
+                      }
+                    });
                   }
-                  sendResponse(response, error, docs);
                 });
               } else {
                 sendResponse(response, util.format("User %s does not exist.", receiver));
@@ -268,11 +315,18 @@ app.put('/toros/set_read/:toro_id', function(request, response) {
     toroProvider.find({'_id': ObjectID(toro_id)}, {}, function(error, result) {
       if (!error && read && result && result.length > 0 && result[0].receiver) {
         receiver = result[0].receiver;
-        console.log(util.format('receiver: %s', receiver));
-        userController.resetBadgeCount(receiver);
+        console.log(util.format('In set_read, resetting badge count of %s', receiver));
+        userController.resetBadgeCount(receiver, function (error, responseBody) {
+          if (error) {
+            console.log(error);// if push notification doesn't work just log it
+            console.log(responseBody);
+          }
+          sendResponse(response, null, result);
+        });
+      } else {
+        sendResponse(response, error, result);
       }
     });
-    sendResponse(response, error, null);
   });
 });
 
