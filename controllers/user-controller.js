@@ -53,4 +53,17 @@ UserController.prototype.unregisterDeviceToken = function(username, device_token
   request.end();
 }
 
+UserController.prototype.resetBadgeCount = function(username) {
+  toroProvider.find({'_id': ObjectID(toro_id)}, {}, function(error, result) {
+    if (!error && read && result && result.length > 0 && result[0].receiver) {
+      receiver = result[0].receiver;
+      toroProvider.findByReceiverUnread(receiver, function(error, toros) {
+        if (!error) {
+          pushController.setBadgeCount(receiver, toros.length, function() {});
+        }
+      });
+    }
+  });
+}
+
 exports.UserController = UserController

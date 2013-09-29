@@ -73,6 +73,7 @@ app.post('/login', function(request, response) {
           return;
         }
       }
+      userController.resetBadgeCount(username);
       sendResponse(response, 'Password did not match.', null);
     }
   });
@@ -260,16 +261,7 @@ app.put('/toros/set_read/:toro_id', function(request, response) {
   }
   var toro_id = request.params.toro_id;
   toroProvider.update(toro_id, {"read":read}, function(error) {
-    toroProvider.find({'_id': ObjectID(toro_id)}, {'sort': {'created_at': -1}}, function(error, result) {
-      if (!error && read && result && result.length > 0 && result[0].receiver) {
-        receiver = result[0].receiver;
-        toroProvider.findByReceiverUnread(receiver, function(error, toros) {
-          if (!error) {
-            pushController.setBadgeCount(receiver, toros.length, function() {});
-          }
-        });
-      }
-    });
+    userController.resetBadgeCount(username);
     sendResponse(response, error, null);
   });
 });
