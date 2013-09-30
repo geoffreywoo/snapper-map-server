@@ -38,7 +38,7 @@ var sendResponse = function (response, error, data) {
   if (error) {
     responseObj = {"ok": false, "error": error}
   } else {
-    if (data) {
+    if (data !== undefined && data !== null) {
       var elementsArray;
       if (data instanceof Array) {
         elementsArray = data;
@@ -184,6 +184,7 @@ app.get('/users/reset_badge_count/:username', function (request, response) {
 
 app.get('/users/get_badge_count/:username', function (request, response) {
   userController.getBadgeCount(request.params.username, function (error, count) {
+    console.log(util.format('count: %d', count));
     sendResponse(response, error, count);
   });
 });

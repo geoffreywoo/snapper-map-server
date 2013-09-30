@@ -21,7 +21,7 @@ var makePushRequest = function(body, callback) {
     },
     auth: util.format('%s:%s', urban_airship_appkey, urban_airship_mastersecret)
   };
-  var request = https.request(options, function(response) {
+  var request = https.request(options, function (response) {
     var statusCode = response.statusCode;
     if (statusCode >= 200 && statusCode <= 203) {
       response.on('data', function(chunk) {
