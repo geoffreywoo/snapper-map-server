@@ -65,44 +65,54 @@ app.get('/', function(request, response) {
 });
 
 app.post('/login', function(request, response) {
-  var username = request.body.username.toLowerCase();
-  userProvider.findByUsername(username, function (error, existing_users) {
-    if (error) {
-      sendResponse(response, error, null);
-    } else if (existing_users.length === 0) {
-      sendResponse(response, util.format('User "%s" not found.', username), null);
-    } else {
-      var user = null;
-      for (var i = 0; i < existing_users.length; i++) {
-        if (request.body.password == existing_users[i].password) {
-          user = existing_users[i];
-          user['password'] = '';
-          break;
-        }
-      }
-      if (user) {
-        userController.resetBadgeCount(username, function (error, responseBody) {
-          if (error) {
-            console.log(error); // log error if badge count failed to reset.
-          }
-          sendResponse(response, null, user);
-        });
+  var username = request.body.username;
+  if (username) {
+    username = username.toLowerCase();
+    userProvider.findByUsername(username, function (error, existing_users) {
+      if (error) {
+        sendResponse(response, error, null);
+      } else if (existing_users.length === 0) {
+        sendResponse(response, util.format('User "%s" not found.', username), null);
       } else {
-        sendResponse(response, 'Password did not match.', null);
-      } 
-    }
-  });
+        var user = null;
+        for (var i = 0; i < existing_users.length; i++) {
+          if (request.body.password == existing_users[i].password) {
+            user = existing_users[i];
+            user['password'] = '';
+            break;
+          }
+        }
+        if (user) {
+          userController.resetBadgeCount(username, function (error, responseBody) {
+            if (error) {
+              console.log(error); // log error if badge count failed to reset.
+            }
+            sendResponse(response, null, user);
+          });
+        } else {
+          sendResponse(response, 'Password did not match.', null);
+        } 
+      }
+    });
+  } else {
+    sendResponse(response, 'Did not include username in login request');
+  }
 });
 
 app.post('/logout', function (request, response) {
   var username = request.body.username;
-  var device_token = request.body.device_token;
-  if (device_token) {
-    userController.unregisterDeviceToken(username, device_token, function (error) {
-      sendResponse(response, error);
-    });
+  if (username) {
+    username = username.toLowerCase();
+    var device_token = request.body.device_token;
+    if (device_token) {
+      userController.unregisterDeviceToken(username, device_token, function (error) {
+        sendResponse(response, error);
+      });
+    } else {
+      sendResponse(response, null, 'Successful');
+    }
   } else {
-    sendResponse(response, null, 'Successful');
+    sendResponse(response, 'Did not include username in logout request');
   }
 });
 
@@ -339,9 +349,13 @@ app.get('/friends/:user_id/:friend_user_id', function(request, response) {
 app.put('/friends/:user_id/:friend_user_id', function(request, response) {
   var user_id = request.params.user_id;
   var friend_user_id = request.params.friend_user_id;
-  friendController.addFriend(user_id, friend_user_id, function(error, friends) {
-    sendResponse(response, error, friends);
-  });
+  if (user_id && friend_user_id) {
+    user_id = user_id.toLowerCase();
+    friend_user_id = friend_user_id.toLowerCase();
+    friendController.addFriend(user_id, friend_user_id, function(error, friends) {
+      sendResponse(response, error, friends);
+    });
+  }
 });
 
 app.del('/friends/:user_id/:friend_user_id', function(request, response) {
