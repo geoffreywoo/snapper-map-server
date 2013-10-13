@@ -7,7 +7,7 @@ var mongo = require('mongodb'),
     DBProvider = require('./dbprovider').DBProvider;
 
 ToroProvider = function() {
-  this.dbProvider = new DBProvider();
+  this.dbProvider = DBProvider.getInstance();
 };
 
 ToroProvider.prototype.find = function(query, options, callback) {

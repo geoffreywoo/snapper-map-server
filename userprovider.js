@@ -8,12 +8,12 @@ var mongo = require('mongodb'),
     userUtils = require('./user_utils');
 
 UserProvider = function() {
-  this.dbProvider = new DBProvider();
+  this.dbProvider = DBProvider.getInstance();
 };
 
 //find all Users
 UserProvider.prototype.findAll = function(callback) {
-  this.dbProvider.getCollection('Users', function(error, user_collection) {
+  this.dbProvider.getCollection('Users', function (error, user_collection) {
     if(error) callback(error);
     else {
       user_collection.find().toArray(function(error, results) {

@@ -8,7 +8,7 @@ var Db = require('mongodb').Db;
     userUtils = require('./user_utils');
 
 AddressbookProvider = function() {
-  this.dbProvider = new DBProvider();
+  this.dbProvider = DBProvider.getInstance();
 };
 
 // AddressBooks is structured like [{"user_id":"jonochang", "AddressBooks":["tonygwu", "geoffwoo"]}]

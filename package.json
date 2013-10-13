@@ -4,7 +4,8 @@
   "dependencies": {
     "express": "3.1.x",
     "mongodb": "1.1.11",
-    "mongo-uri": "0.1.2"
+    "mongo-uri": "0.1.2",
+    "pow-mongodb-fixtures": "0.10.0"
   },
   "engines": {
     "node": "0.10.x",

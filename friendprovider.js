@@ -7,7 +7,7 @@ var Db = require('mongodb').Db;
     util = require('util');
 
 FriendProvider = function() {
-  this.dbProvider = new DBProvider();
+  this.dbProvider = DBProvider.getInstance();
 };
 
 // Friends is structured like [{"user_id":"jonochang", "friends":["tonygwu", "geoffwoo"]}]

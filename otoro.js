@@ -8,13 +8,25 @@ var express = require("express"),
     UserProvider = require('./userprovider').UserProvider,
     UserController = require('./controllers/user-controller').UserController,
     PushController = require('./controllers/push-controller').PushController,
-    ToroController = require('./torocontroller').ToroController,
+    FriendController = require('./controllers/friend-controller').FriendController,
+    ToroController = require('./controllers/toro-controller').ToroController,
     ToroProvider = require('./toroprovider').ToroProvider,
     FriendProvider = require('./friendprovider').FriendProvider,
     AddressbookProvider = require('./addressbookprovider').AddressbookProvider;
 
+
 app.use(express.logger());
 app.use(express.bodyParser());
+
+var userProvider = new UserProvider();
+var toroProvider = new ToroProvider();
+var userController = new UserController();
+var pushController = new PushController();
+var toroController = new ToroController(pushController);
+toroController.setUserController(userController);
+var friendProvider = new FriendProvider();
+var addressbookProvider = new AddressbookProvider();
+var friendController = new FriendController();
 
 app.configure('development', function() {
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
@@ -23,14 +35,6 @@ app.configure('development', function() {
 app.configure('production', function() {
   app.use(express.errorHandler());
 });
-
-var userProvider = new UserProvider();
-var toroProvider = new ToroProvider();
-var toroController = new ToroController();
-var friendProvider = new FriendProvider();
-var addressbookProvider = new AddressbookProvider();
-var userController = new UserController();
-var pushController = new PushController();
 
 // only called when its 200
 var sendResponse = function (response, error, data) {
@@ -61,7 +65,7 @@ app.get('/', function(request, response) {
 });
 
 app.post('/login', function(request, response) {
-  var username = request.body.username;
+  var username = request.body.username.toLowerCase();
   userProvider.findByUsername(username, function (error, existing_users) {
     if (error) {
       sendResponse(response, error, null);
@@ -125,7 +129,15 @@ app.post('/users/new', function(request, response) {
               email: email,
               phone: request.body.phone
             }, function(error, docs) {
-              sendResponse(response, error, docs);
+              if (error) {
+                sendResponse(response, error, docs);
+              } else {
+                friendController.addFriend(username, 'teamsnapper', function(error, friends) {
+                  toroController.newToro('teamsnapper', username, 40.7577, -73.9857, 'Welcome to snapper map!', 'Times Square', '123', function(error, toro) {
+                    sendResponse(response, error);
+                  });
+                });
+              }
             });
           }
         });
@@ -243,33 +255,8 @@ app.post('/toros/new', function(request, response) {
               if (error) {
                 sendResponse(response, error);
               } else if (result) {
-                toroProvider.save({
-                  latitude: latitude,
-                  longitude: longitude,
-                  sender: sender,
-                  receiver: receiver,
-                  message: request.body.message,
-                  venue: request.body.venue,
-                  venueID: request.body.venueID,
-                  read:false
-                }, function(error, docs) {
-                  if (error) {
-                    sendResponse(response, error);
-                  } else {
-                    userController.getBadgeCount(receiver, function (error, count) {
-                      if (error) {
-                        console.log(error);
-                        sendResponse(response, null, docs); // don't send error if getting badge count failed.
-                      } else {
-                        pushController.sendNotification(receiver, util.format('from %s', sender), count, function (error, responseBody) {
-                          if (error) {
-                            console.log(error);
-                          }
-                          sendResponse(response, null, docs); // don't send error if push failed.
-                        });
-                      }
-                    });
-                  }
+                toroController.newToro(sender, receiver, latitude, longitude, request.body.message, request.body.venue, request.body.venueID, function(error, toro) {
+                  sendResponse(response, error, toro);
                 });
               } else {
                 sendResponse(response, util.format("User %s does not exist.", receiver));
@@ -352,35 +339,9 @@ app.get('/friends/:user_id/:friend_user_id', function(request, response) {
 app.put('/friends/:user_id/:friend_user_id', function(request, response) {
   var user_id = request.params.user_id;
   var friend_user_id = request.params.friend_user_id;
-  if (user_id && friend_user_id) {
-    if (user_id === friend_user_id) {
-      sendResponse(response, util.format('User "%s" cannot add self as friend.', user_id));
-    } else {
-      userProvider.findByUsername(user_id, function(error, results) {
-        if (error || results.length == 0) {
-          sendResponse(response, util.format('User "%s" was not found.', user_id), null);
-        } else {
-          userProvider.findByUsername(friend_user_id, function(error, results) {
-            if (error || results.length == 0) {
-              sendResponse(response, util.format('User "%s" was not found.', friend_user_id), null);
-            } else {
-              friendProvider.save(user_id, {"user_id": friend_user_id, "blocked": false}, function(error, friends) {
-                if (error) {
-                  sendResponse(response, error, null);
-                } else {
-                  friendProvider.save(friend_user_id, {"user_id": user_id, "blocked": false}, function(error) {
-                    sendResponse(response, error, friends);
-                  });
-                }
-              });
-            }
-          });
-        }
-      });
-    }
-  } else {
-    sendResponse(response, util.format('Must pass in a valid user_id and friend_user_id parameter.'));
-  }
+  friendController.addFriend(user_id, friend_user_id, function(error, friends) {
+    sendResponse(response, error, friends);
+  });
 });
 
 app.del('/friends/:user_id/:friend_user_id', function(request, response) {

@@ -1,6 +1,6 @@
 var util = require('util'),
-    UserProvider = require('./userprovider').UserProvider,
-    ToroProvider = require('./toroprovider').ToroProvider;
+    UserProvider = require('../userprovider').UserProvider,
+    ToroProvider = require('../toroprovider').ToroProvider;
 
 var outputToro = function(toro_data, callback) {
   if (toro_data) {
@@ -36,10 +36,15 @@ var outputToros = function(toro_datas, callback) {
   }
 };
 
-ToroController = function() {
+ToroController = function(pushController) {
   this.toroProvider = new ToroProvider();
   this.userProvider = new UserProvider();
+  this.pushController = pushController;
 };
+
+ToroController.prototype.setUserController = function (userController) {
+  this.userController = userController;
+}
 
 ToroController.prototype.checkUserExistsError = function(username, callback) {
   this.userProvider.findByUsername(username, function(error, users) {
@@ -60,6 +65,25 @@ ToroController.prototype.findByReceiver = function(username, callback) {
       callback(error);
     } else {
       toroProvider.findByReceiver(username, function (error, toros) {
+        if (error) {
+          callback(error);
+        } else {
+          outputToros(toros, function (error, output) {
+            callback(error, output);
+          });
+        }
+      }, {'created_at': -1});
+    }
+  });
+};
+
+ToroController.prototype.findByReceiverUnread = function(username, callback) {
+  var toroProvider = this.toroProvider;
+  this.checkUserExistsError(username, function(error) {
+    if (error) {
+      callback(error);
+    } else {
+      toroProvider.findByReceiverUnread(username, function (error, toros) {
         if (error) {
           callback(error);
         } else {
@@ -109,5 +133,39 @@ ToroController.prototype.findBySenderOrReceiver = function(username, callback) {
     }
   });
 };
+
+ToroController.prototype.newToro = function (sender, receiver, latitude, longitude, message, venue, venueID, callback) {
+  var toroProvider = this.toroProvider;
+  var userController = this.userController;
+  var pushController = this.pushController;
+  toroProvider.save({
+    latitude: latitude,
+    longitude: longitude,
+    sender: sender,
+    receiver: receiver,
+    message: message,
+    venue: venue,
+    venueID: venueID,
+    read:false
+  }, function(error, docs) {
+    if (error) {
+      callback(error);
+    } else {
+      userController.getBadgeCount(receiver, function (error, count) {
+        if (error) {
+          console.log(error);
+          callback(null, docs); // don't send error if getting badge count failed.
+        } else {
+          pushController.sendNotification(receiver, util.format('from %s', sender), count, function (error, responseBody) {
+            if (error) {
+              console.log(error);
+            }
+            callback(null, docs); // don't send error if push failed.
+          });
+        }
+      });
+    }
+  });
+}
 
 exports.ToroController = ToroController;
