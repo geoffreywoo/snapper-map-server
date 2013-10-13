@@ -134,7 +134,7 @@ app.post('/users/new', function(request, response) {
               } else {
                 friendController.addFriend(username, 'teamsnapper', function(error, friends) {
                   toroController.newToro('teamsnapper', username, 40.7577, -73.9857, 'Welcome to snapper map!', 'Times Square', '123', function(error, toro) {
-                    sendResponse(response, error);
+                    sendResponse(response, error, docs);
                   });
                 });
               }
