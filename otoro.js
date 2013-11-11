@@ -9,6 +9,7 @@ var express = require("express"),
     UserController = require('./controllers/user-controller').UserController,
     PushController = require('./controllers/push-controller').PushController,
     FriendController = require('./controllers/friend-controller').FriendController,
+    PufferController = require('./controllers/puffer-controller').PufferController,
     ToroController = require('./controllers/toro-controller').ToroController,
     ToroProvider = require('./toroprovider').ToroProvider,
     FriendProvider = require('./friendprovider').FriendProvider,
@@ -27,6 +28,8 @@ toroController.setUserController(userController);
 var friendProvider = new FriendProvider();
 var addressbookProvider = new AddressbookProvider();
 var friendController = new FriendController();
+var pufferController = new PufferController(pushController);
+pufferController.setUserController(userController);
 
 app.configure('development', function() {
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
@@ -66,6 +69,7 @@ app.get('/', function(request, response) {
 
 app.post('/login', function(request, response) {
   var username = request.body.username;
+  var app = request.body.app;
   if (username) {
     username = username.toLowerCase();
     userProvider.findByUsername(username, function (error, existing_users) {
@@ -82,8 +86,8 @@ app.post('/login', function(request, response) {
             break;
           }
         }
-        if (user) {
-          userController.resetBadgeCount(username, function (error, responseBody) {
+        if (user && app) {
+          userController.resetBadgeCount(username, app, function (error, responseBody) {
             if (error) {
               console.log(error); // log error if badge count failed to reset.
             }
@@ -314,7 +318,7 @@ app.put('/toros/set_read/:toro_id', function(request, response) {
       if (!error && read && result && result.length > 0 && result[0].receiver) {
         receiver = result[0].receiver;
         console.log(util.format('In set_read, resetting badge count of %s', receiver));
-        userController.resetBadgeCount(receiver, function (error, responseBody) {
+        userController.resetBadgeCount(receiver, 'snappermap', function (error, responseBody) {
           if (error) {
             console.log(error);// if push notification doesn't work just log it
             console.log(responseBody);
@@ -328,8 +332,103 @@ app.put('/toros/set_read/:toro_id', function(request, response) {
   });
 });
 
-app.put('/toros/update/:toro_id', function(request, response) {
+app.put('/toros/update/:toro_id', function (request, response) {
   toroProvider.update(request.params.toro_id, request.body, function(error) {
+    sendResponse(response, error, null);
+  });
+});
+
+app.post('/puffers/new', function (request, response) {
+  var sender = request.body.sender;
+  var receiver = request.body.receiver;
+  var image = request.body.image;
+  var duration = request.body.duration;
+
+  if (image && sender && receiver && duration) {
+    if (isNaN(duration) || duration <= 0) {
+      sendResponse(respone, util.format('Duration "%d" is not a valid duration.'));
+    } else {
+      if (sender === receiver) {
+        sendResponse(response, 'You cannot send a puffer to yourself.', null);
+      } else {
+        userProvider.findOneByUsername(sender, function(error, result) {
+          if (error) {
+            sendResponse(response, error);
+          } else if (result) {
+            userProvider.findOneByUsername(receiver, function(error, result) {
+              if (error) {
+                sendResponse(response, error);
+              } else if (result) {
+                pufferController.newPuffer(sender, receiver, image, request.body.message, duration, function(error, puffer) {
+                  sendResponse(response, error, puffer);
+                });
+              } else {
+                sendResponse(response, util.format("User %s does not exist.", receiver));
+              }
+            });
+          } else {
+            sendResponse(response, util.format("User %s doesn't exist.", sender));
+          }
+        });
+      }
+    }
+  } else {
+    sendResponse(response, "Request missing one of required attributes: sender, receiver, image, or duration.");
+  }
+});
+
+app.get('/puffers/received/:user_id', function (request, response) {
+  pufferController.findByReceiver(request.params.user_id, function (error, puffers) {
+    sendResponse(response, error, puffers);
+  });
+});
+
+app.get('/puffers/sent/:user_id', function (request, response) {
+  pufferController.findBySender(request.params.user_id, function (error, puffers) {
+    sendResponse(response, error, puffers);
+  });
+});
+
+app.get('/puffers/:user_id', function(request, response) {
+  pufferController.findBySenderOrReceiver(request.params.user_id, function (error, puffers) {
+    sendResponse(response, error, puffers);
+  });
+});
+
+app.put('/puffers/set_read/:toro_id', function(request, response) {
+  var read = request.body.read;
+  if (read === null || read === undefined) { // Setting read without parameters sets read to true.
+    read = true;
+  }
+  var puffer_id = request.params.puffer_id;
+  pufferProvider.update(puffer_id, {"read":read}, function(error) {
+    toroProvider.find({'_id': ObjectID(toro_id)}, {}, function(error, result) {
+      if (!error && read && result && result.length > 0 && result[0].receiver) {
+        receiver = result[0].receiver;
+        console.log(util.format('In set_read, resetting badge count of %s', receiver));
+        userController.resetBadgeCount(receiver, 'pufferchat', function (error, responseBody) {
+          if (error) {
+            console.log(error);// if push notification doesn't work just log it
+            console.log(responseBody);
+          }
+          sendResponse(response, null, result);
+        });
+      } else {
+        sendResponse(response, error, result);
+      }
+    });
+  });
+});
+
+app.put('/puffers/expire/:puffer_id', function(request, response) {
+  var expired = request.body.expired;
+  pufferController.expire(request.params.puffer_id, expired, function(error, result) {
+    sendResponse(response, error, result);
+  });
+});
+
+app.put('/puffers/update/:puffer_id', function(request, response) {
+  pufferProvider.update(request.params.puffer_id, request.body, function(error) {
     sendResponse(response, error, null);
   });
 });

@@ -156,7 +156,7 @@ ToroController.prototype.newToro = function (sender, receiver, latitude, longitu
           console.log(error);
           callback(null, docs); // don't send error if getting badge count failed.
         } else {
-          pushController.sendNotification(receiver, util.format('from %s', sender), count, function (error, responseBody) {
+          pushController.sendNotification(receiver, 'pufferchat', util.format('from %s', sender), count, function (error, responseBody) {
             if (error) {
               console.log(error);
             }

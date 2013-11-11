@@ -1,7 +1,8 @@
 var https = require('https'),
     util = require('util'),
     PushController = require('./push-controller').PushController,
-    ToroController = require('./toro-controller').ToroController;
+    ToroController = require('./toro-controller').ToroController,
+    PufferController = require('./puffer-controller').PufferController;
 
 var urban_airship_host = 'go.urbanairship.com';
 var urban_airship_appkey = '6w6o7r7RQue9QAbyg6tN2Q';
@@ -9,6 +10,7 @@ var urban_airship_appsecret = 'gd_o2UPsQMGzxXQ3sktDWw';
 var urban_airship_mastersecret = 'E2xaw_GMTUWaTUXY_PlD3A';
 
 var toroController = new ToroController();
+var pufferController = new PufferController();
 var pushController = new PushController();
 
 UserController = function() {
@@ -60,8 +62,14 @@ UserController.prototype.unregisterDeviceToken = function(username, device_token
   request.end();
 }
 
-UserController.prototype.getBadgeCount = function(username, callback) {
-  toroController.findByReceiverUnread(username, function(error, toros) {
+UserController.prototype.getBadgeCount = function(username, app, callback) {
+  var controller;
+  if (app === "snappermap") { // toros
+    controller = toroController;
+  } else if (app === "pufferchat") {
+    controller = pufferController;
+  }
+  controller.findByReceiverUnread(username, function(error, toros) {
     if (error) {
       callback(error);
     } else if (toros) {
@@ -72,13 +80,13 @@ UserController.prototype.getBadgeCount = function(username, callback) {
   });
 }
 
-UserController.prototype.resetBadgeCount = function(username, callback) {
+UserController.prototype.resetBadgeCount = function(username, app, callback) {
   this.getBadgeCount(username, function(error, count) {
     if (error) {
       callback('Could not get the correct badge count!', null);
     } else {
       console.log(util.format('Resetting badge count for user %s to: %d', username, count));
-      pushController.setBadgeCount(username, count, function(error, responseBody) {
+      pushController.setBadgeCount(username, app, count, function(error, responseBody) {
         callback(error, responseBody);
       });
     }
