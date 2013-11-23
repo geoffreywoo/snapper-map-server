@@ -1,12 +1,14 @@
 var util = require('util'),
     UserProvider = require('../userprovider').UserProvider,
     PufferProvider = require('../pufferprovider').PufferProvider,
-    async = require('async');
+    async = require('async'),
+    ImageController = require('./image-controller').ImageController;
 
 PufferController = function(pushController) {
   this.pufferProvider = new PufferProvider();
   this.userProvider = new UserProvider();
   this.pushController = pushController;
+  this.imageController = new ImageController();
 };
 
 PufferController.prototype.setUserController = function (userController) {
@@ -104,8 +106,6 @@ PufferController.prototype.findBySender = function(username, callback) {
 };
 
 PufferController.prototype.findBySenderOrReceiver = function(username, callback) {
-  var pufferProvider = this.pufferProvider;
-  var outputPuffers = this.outputPuffers;
   this.checkUserExistsError(username, function(error) {
     if (error) {
       callback(error);
@@ -123,32 +123,35 @@ PufferController.prototype.findBySenderOrReceiver = function(username, callback)
   }.bind(this));
 };
 
-PufferController.prototype.expire = function (puffer_id, expired, callback) {
+PufferController.prototype.expire = function (puffer, expired, callback) {
   if (expired === null || expired === undefined) { // Setting read without parameters sets expired to true.
     expired = true;
   }
-  var pufferProvider = this.pufferProvider;
-  var userController = this.userController;
-  this.pufferProvider.update(puffer_id, {"expired":expired}, function(error) {
-    pufferProvider.find({'_id': ObjectID(puffer_id)}, {}, function(error, result) {
-      if (!error && expired && result && result.length > 0 && result[0].receiver) {
-        receiver = result[0].receiver;
-        userController.resetBadgeCount(receiver, 'pufferchat', function (error, responseBody) {
-          if (error) {
-            console.log(error);// if push notification doesn't work just log it
-          }
-          callback(null, result);
-        });
-      } else {
-        callback(error, result);
-      }
-    });
-  });
+
+  this.imageController.transitionPhoto(puffer, function (error, result) {
+    this.pufferProvider.update(puffer.id, {"expired":expired}, function(error) {
+      this.pufferProvider.find({'_id': ObjectID(puffer.id)}, {}, function(error, result) {
+        if (!error && expired && result && result.length > 0 && result[0].receiver) {
+          receiver = result[0].receiver;
+          userController.resetBadgeCount(receiver, 'pufferchat', function (error, responseBody) {
+            if (error) {
+              console.log(error);// if push notification doesn't work just log it
+            }
+            callback(null, result);
+          });
+        } else {
+          callback(error, result);
+        }
+      });
+    }.bind(this));
+  }.bind(this));
+
+
 };
 
 PufferController.prototype.checkAndExpirePuffer = function (puffer, callback) {
-  if (puffer.created_at.getTime() + puffer.duration * 1000 < new Date().getTime()) {
-    this.expire(puffer.id, true, function(error, result) {
+  if (!puffer.expired && puffer.created_at.getTime() + puffer.duration * 1000 < new Date().getTime()) {
+    this.expire(puffer, true, function(error, result) {
       if (error) {
         callback(error, false, result);
       } else {

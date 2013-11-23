@@ -1,5 +1,6 @@
-var https = require('https'),
-    util = require('util');
+var http = require('http'),
+    util = require('util'),
+    request = require('request');
 
 var image_server_host = 'images.snappierchat.com';
 
@@ -15,7 +16,6 @@ var makeRequest = function(body, method, content_type, host, path, callback) {
     if (content_type == 'application/json') {
       request_body = JSON.stringify(body);
     }
-    
   }
   if (content_type) {
     headers['Content-Type'] = content_type;
@@ -26,8 +26,8 @@ var makeRequest = function(body, method, content_type, host, path, callback) {
     headers['Content-Length'] = 0;
   }
   var options = {
-    hostname: urbanairship_options.host,
-    path: util.format('/%s/', operation),
+    hostname: image_server_host,
+    path: util.format('/%s/', path),
     method: method,
     headers: headers
   };
@@ -43,15 +43,27 @@ var makeRequest = function(body, method, content_type, host, path, callback) {
       });
     }
   });
-  request.write(request_body);
+  if (request_body) {
+    request.write(request_body);
+  }
   request.on('error', function (error) {
     callback(error, null);
   });
   request.end();
 }
 
-ImageController.prototype.blurPhoto = function(photoId, callback) {
-  makeRequest(null, 'PUT', null, 'blur', image_server_host, callback);
+ImageController.prototype.transitionPhoto = function(photoId, callback) {
+  request({
+    uri: util.format('http://images.snappierchat.com/swap/%d', photoId),
+    method: 'PUT'
+  }, function(error, response, body) {
+    if (!error && response.statusCode == 200) {
+      callback(null, body);
+    } else {
+      callback(error, body);
+    }
+  })
+
 }
 
 exports.ImageController = ImageController

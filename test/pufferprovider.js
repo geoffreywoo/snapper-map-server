@@ -36,7 +36,7 @@ PufferProvider.prototype.findBySender = function(username, callback, sort) {
 
 PufferProvider.prototype.findByReceiverUnread = function(username, callback) {
   this.find({'receiver': username, 'read': false}, {}, callback);
-}
+};
 
 PufferProvider.prototype.findBySenderOrReceiver = function(username, callback, sort) {
   this.find({'$or': [{'sender': username}, {'receiver': username}]}, {'sort': sort}, callback);
@@ -44,15 +44,15 @@ PufferProvider.prototype.findBySenderOrReceiver = function(username, callback, s
 
 //find all Puffers
 PufferProvider.prototype.findAll = function(callback) {
-    this.dbProvider.getCollection('Puffers', function(error, Puffer_collection) {
-      if( error ) callback(error)
-      else {
-        Puffer_collection.find().toArray(function(error, results) {
-          if( error ) callback(error)
-          else callback(null, results);
-        });
-      }
-    });
+  this.dbProvider.getCollection('Puffers', function(error, puffer_collection) {
+    if( error ) callback(error);
+    else {
+      puffer_collection.find().toArray(function(error, results) {
+        if( error ) callback(error)
+        else callback(null, results);
+      });
+    }
+  });
 };
 
 //save new Puffer

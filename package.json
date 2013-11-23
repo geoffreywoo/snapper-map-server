@@ -6,7 +6,8 @@
     "mongodb": "1.1.11",
     "mongo-uri": "0.1.2",
     "pow-mongodb-fixtures": "0.10.0",
-    "async": "0.2.9"
+    "async": "0.2.9",
+    "request": "2.25.0"
   },
   "engines": {
     "node": "0.10.x",
