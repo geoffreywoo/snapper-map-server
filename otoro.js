@@ -69,7 +69,7 @@ app.get('/', function(request, response) {
 
 app.post('/login', function(request, response) {
   var username = request.body.username;
-  var app = request.body.app;
+  var appName = request.body.app;
   if (username) {
     username = username.toLowerCase();
     userProvider.findByUsername(username, function (error, existing_users) {
@@ -86,8 +86,11 @@ app.post('/login', function(request, response) {
             break;
           }
         }
-        if (user && app) {
-          userController.resetBadgeCount(username, app, function (error, responseBody) {
+        if (user) {
+          if (!appName) {
+            appName = 'snappermap';
+          }
+          userController.resetBadgeCount(username, appName, function (error, responseBody) {
             if (error) {
               console.log(error); // log error if badge count failed to reset.
             }
@@ -95,7 +98,7 @@ app.post('/login', function(request, response) {
           });
         } else {
           sendResponse(response, 'Password did not match.', null);
-        } 
+        }
       }
     });
   } else {
@@ -202,15 +205,14 @@ app.del('/users/device_token/:username/:device_token', function (request, respon
   });
 });
 
-app.get('/users/reset_badge_count/:username', function (request, response) {
-  userController.resetBadgeCount(request.params.username, function (error, responseBody) {
+app.post('/users/reset_badge_count/:app/:username', function (request, response) {
+  userController.resetBadgeCount(request.params.username, request.params.app, function (error, responseBody) {
     sendResponse(response, error, responseBody);
   });
 });
 
-app.get('/users/get_badge_count/:username', function (request, response) {
-  userController.getBadgeCount(request.params.username, function (error, count) {
-    console.log(util.format('count: %d', count));
+app.post('/users/get_badge_count/:app/:username', function (request, response) {
+  userController.getBadgeCount(request.params.username, request.params.app, function (error, count) {
     sendResponse(response, error, count);
   });
 });

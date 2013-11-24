@@ -81,7 +81,7 @@ UserController.prototype.getBadgeCount = function(username, app, callback) {
 }
 
 UserController.prototype.resetBadgeCount = function(username, app, callback) {
-  this.getBadgeCount(username, function(error, count) {
+  this.getBadgeCount(username, app, function(error, count) {
     if (error) {
       callback('Could not get the correct badge count!', null);
     } else {
