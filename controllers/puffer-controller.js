@@ -128,7 +128,7 @@ PufferController.prototype.expire = function (puffer, expired, callback) {
     expired = true;
   }
 
-  this.imageController.transitionPhoto(puffer, function (error, result) {
+  this.imageController.transitionPhoto(puffer.id, function (error, result) {
     this.pufferProvider.update(puffer.id, {"expired":expired}, function(error) {
       this.pufferProvider.find({'_id': ObjectID(puffer.id)}, {}, function(error, result) {
         if (!error && expired && result && result.length > 0 && result[0].receiver) {
