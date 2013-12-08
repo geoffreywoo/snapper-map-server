@@ -207,13 +207,25 @@ app.del('/users/device_token/:username/:device_token', function (request, respon
   });
 });
 
+app.post('/users/reset_badge_count/:username', function (request, response) {
+  userController.resetBadgeCount(request.params.username, 'snappermap', function (error, responseBody) {
+    sendResponse(response, error, responseBody);
+  });
+});
+
 app.post('/users/reset_badge_count/:app/:username', function (request, response) {
   userController.resetBadgeCount(request.params.username, request.params.app, function (error, responseBody) {
     sendResponse(response, error, responseBody);
   });
 });
 
-app.post('/users/get_badge_count/:app/:username', function (request, response) {
+app.get('/users/get_badge_count/:username', function (request, response) {
+  userController.getBadgeCount(request.params.username, 'pufferchat', function (error, count) {
+    sendResponse(response, error, count);
+  });
+});
+
+app.get('/users/get_badge_count/:app/:username', function (request, response) {
   userController.getBadgeCount(request.params.username, request.params.app, function (error, count) {
     sendResponse(response, error, count);
   });
