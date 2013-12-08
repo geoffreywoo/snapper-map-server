@@ -91,11 +91,12 @@ app.post('/login', function(request, response) {
             appName = 'snappermap';
           }
           // userController.resetBadgeCount(username, appName, function (error, responseBody) {
-            if (error) {
-              console.log(error); // log error if badge count failed to reset.
-            }
-            sendResponse(response, null, user);
-          });
+          //   if (error) {
+          //     console.log(error); // log error if badge count failed to reset.
+          //   }
+          //   sendResponse(response, null, user);
+          // });
+          sendResponse(response, null, user);
         } else {
           sendResponse(response, 'Password did not match.', null);
         }
