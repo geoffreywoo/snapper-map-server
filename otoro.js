@@ -90,6 +90,7 @@ app.post('/login', function(request, response) {
           if (!appName) {
             appName = 'snappermap';
           }
+          // TODO  re-enable resetBadgeCount.
           // userController.resetBadgeCount(username, appName, function (error, responseBody) {
           //   if (error) {
           //     console.log(error); // log error if badge count failed to reset.

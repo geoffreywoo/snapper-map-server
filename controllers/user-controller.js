@@ -64,7 +64,7 @@ UserController.prototype.unregisterDeviceToken = function(username, device_token
 
 UserController.prototype.getBadgeCount = function(username, app, callback) {
   var controller;
-  if (app === "snappermap") { // toros
+  if (!app || app === "snappermap") {
     controller = toroController;
   } else if (app === "pufferchat") {
     controller = pufferController;
