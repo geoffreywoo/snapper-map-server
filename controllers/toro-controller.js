@@ -1,6 +1,7 @@
 var util = require('util'),
     UserProvider = require('../userprovider').UserProvider,
     ToroProvider = require('../toroprovider').ToroProvider;
+    constants = require('../constants');
 
 var outputToro = function(toro_data, callback) {
   if (toro_data) {
@@ -151,7 +152,7 @@ ToroController.prototype.newToro = function (sender, receiver, latitude, longitu
     if (error) {
       callback(error);
     } else {
-      userController.getBadgeCount(receiver, function (error, count) {
+      userController.getBadgeCount(receiver, constants.APPS.SNAPPERMAP, function (error, count) {
         if (error) {
           console.log(error);
           callback(null, docs); // don't send error if getting badge count failed.

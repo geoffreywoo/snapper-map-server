@@ -14,7 +14,8 @@ var express = require("express"),
     ToroController = require('./controllers/toro-controller').ToroController,
     ToroProvider = require('./toroprovider').ToroProvider,
     FriendProvider = require('./friendprovider').FriendProvider,
-    AddressbookProvider = require('./addressbookprovider').AddressbookProvider;
+    AddressbookProvider = require('./addressbookprovider').AddressbookProvider,
+    constants = require('./constants');
 
 
 app.use(express.logger());
@@ -22,9 +23,9 @@ app.use(express.bodyParser());
 
 var userProvider = new UserProvider();
 var toroProvider = new ToroProvider();
-var userController = new UserController();
 var pushController = new PushController();
 var toroController = new ToroController(pushController);
+var userController = new UserController(pushController, toroController, pufferController);
 toroController.setUserController(userController);
 var friendProvider = new FriendProvider();
 var addressbookProvider = new AddressbookProvider();
@@ -89,7 +90,7 @@ app.post('/login', function(request, response) {
         }
         if (user) {
           if (!appName) {
-            appName = 'snappermap';
+            appName = constants.APPS.SNAPPERMAP;
           }
           // TODO  re-enable resetBadgeCount.
           // userController.resetBadgeCount(username, appName, function (error, responseBody) {
@@ -209,7 +210,7 @@ app.del('/users/device_token/:username/:device_token', function (request, respon
 });
 
 app.post('/users/reset_badge_count/:username', function (request, response) {
-  userController.resetBadgeCount(request.params.username, 'snappermap', function (error, responseBody) {
+  userController.resetBadgeCount(request.params.username, constants.APPS.SNAPPERMAP, function (error, responseBody) {
     sendResponse(response, error, responseBody);
   });
 });
@@ -221,7 +222,7 @@ app.post('/users/reset_badge_count/:app/:username', function (request, response)
 });
 
 app.get('/users/get_badge_count/:username', function (request, response) {
-  userController.getBadgeCount(request.params.username, 'pufferchat', function (error, count) {
+  userController.getBadgeCount(request.params.username, constants.APPS.SNAPPERMAP, function (error, count) {
     sendResponse(response, error, count);
   });
 });
@@ -335,7 +336,7 @@ app.put('/toros/set_read/:toro_id', function(request, response) {
       if (!error && read && result && result.length > 0 && result[0].receiver) {
         receiver = result[0].receiver;
         console.log(util.format('In set_read, resetting badge count of %s', receiver));
-        userController.resetBadgeCount(receiver, 'snappermap', function (error, responseBody) {
+        userController.resetBadgeCount(receiver, constants.APPS.SNAPPERMAP, function (error, responseBody) {
           if (error) {
             console.log(error);// if push notification doesn't work just log it
             console.log(responseBody);

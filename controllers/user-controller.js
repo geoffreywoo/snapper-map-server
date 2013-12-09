@@ -1,20 +1,16 @@
 var https = require('https'),
     util = require('util'),
-    PushController = require('./push-controller').PushController,
-    ToroController = require('./toro-controller').ToroController,
-    PufferController = require('./puffer-controller').PufferController;
+    constants = require('../constants');
 
 var urban_airship_host = 'go.urbanairship.com';
 var urban_airship_appkey = '6w6o7r7RQue9QAbyg6tN2Q';
 var urban_airship_appsecret = 'gd_o2UPsQMGzxXQ3sktDWw';
 var urban_airship_mastersecret = 'E2xaw_GMTUWaTUXY_PlD3A';
 
-var toroController = new ToroController();
-var pufferController = new PufferController();
-var pushController = new PushController();
-
-UserController = function() {
-
+UserController = function(pushController, toroController, pufferController) {
+  this.pushController = pushController;
+  this.toroController = toroController;
+  this.pufferController = pufferController;
 };
 
 UserController.prototype.registerDeviceToken = function(username, device_token, callback) {
@@ -64,10 +60,12 @@ UserController.prototype.unregisterDeviceToken = function(username, device_token
 
 UserController.prototype.getBadgeCount = function(username, app, callback) {
   var controller;
-  if (!app || app === "snappermap") {
-    controller = toroController;
-  } else if (app === "pufferchat") {
-    controller = pufferController;
+  if (app === constants.APPS.SNAPPERMAP) {
+    controller = this.toroController;
+  } else if (app === constants.APPS.PUFFERCHAT) {
+    controller = this.pufferController;
+  } else {
+    controller = this.toroController;
   }
   controller.findByReceiverUnread(username, function(error, toros) {
     if (error) {
@@ -86,11 +84,11 @@ UserController.prototype.resetBadgeCount = function(username, app, callback) {
       callback('Could not get the correct badge count!', null);
     } else {
       console.log(util.format('Resetting badge count for user %s to: %d', username, count));
-      pushController.setBadgeCount(username, app, count, function(error, responseBody) {
+      this.pushController.setBadgeCount(username, app, count, function(error, responseBody) {
         callback(error, responseBody);
       });
     }
-  });
+  }).bind(this);
 }
 
 exports.UserController = UserController
