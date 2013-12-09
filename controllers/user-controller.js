@@ -88,7 +88,7 @@ UserController.prototype.resetBadgeCount = function(username, app, callback) {
         callback(error, responseBody);
       });
     }
-  }).bind(this);
+  }.bind(this));
 }
 
 exports.UserController = UserController
