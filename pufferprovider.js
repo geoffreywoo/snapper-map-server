@@ -13,11 +13,11 @@ PufferProvider = function() {
 };
 
 PufferProvider.prototype.find = function(query, options, callback) {
-  this.dbProvider.getCollection(PUFFER_COLLECTION, function(error, toro_collection) {
+  this.dbProvider.getCollection(PUFFER_COLLECTION, function(error, puffer_collection) {
     if (error) {
       callback(error);
     } else {
-      toro_collection.find(query, options).toArray(function(error, results) {
+      puffer_collection.find(query, options).toArray(function(error, results) {
         if (error)  {
           callback(error);
         } else {
@@ -46,10 +46,10 @@ PufferProvider.prototype.findBySenderOrReceiver = function(username, callback, s
 
 //find all toros
 PufferProvider.prototype.findAll = function(callback) {
-    this.dbProvider.getCollection(PUFFER_COLLECTION, function(error, toro_collection) {
+    this.dbProvider.getCollection(PUFFER_COLLECTION, function(error, puffer_collection) {
       if( error ) callback(error)
       else {
-        toro_collection.find().toArray(function(error, results) {
+        puffer_collection.find().toArray(function(error, results) {
           if( error ) callback(error)
           else callback(null, results);
         });
@@ -59,7 +59,7 @@ PufferProvider.prototype.findAll = function(callback) {
 
 //save new Toro
 PufferProvider.prototype.save = function(toros, callback) {
-  this.dbProvider.getCollection(PUFFER_COLLECTION, function(error, toro_collection) {
+  this.dbProvider.getCollection(PUFFER_COLLECTION, function(error, puffer_collection) {
     if( error ) callback(error)
     else {
       if( typeof(toros.length)=="undefined")
@@ -70,18 +70,19 @@ PufferProvider.prototype.save = function(toros, callback) {
         toro.created_at = new Date();
       }
 
-      toro_collection.insert(toros, function() {
+      puffer_collection.insert(toros, function() {
         callback(null, toros);
       });
     }
   });
 };
 
-PufferProvider.prototype.update = function(toro_id, updates, callback) {
-    this.dbProvider.getCollection(PUFFER_COLLECTION, function(error, toro_collection) {
-      if( error ) callback(error)
-      else {
-        toro_collection.update({"_id":ObjectID(toro_id)}, {"$set":updates}, function() {
+PufferProvider.prototype.update = function(puffer_id, updates, callback) {
+    this.dbProvider.getCollection(PUFFER_COLLECTION, function(error, puffer_collection) {
+      if (error) {
+        callback(error);
+      } else {
+        puffer_collection.update({"_id":ObjectID(puffer_id)}, {"$set":updates}, function() {
           callback(null);
         });
       }

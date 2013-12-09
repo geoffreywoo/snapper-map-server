@@ -4,6 +4,7 @@ var express = require("express"),
     util = require('util'),
     http = require('http'),
     path = require('path'),
+    async = require('async'),
     ObjectID = require('mongodb').ObjectID,
     UserProvider = require('./userprovider').UserProvider,
     UserController = require('./controllers/user-controller').UserController,
@@ -357,39 +358,58 @@ app.put('/toros/update/:toro_id', function (request, response) {
 app.post('/puffers/new', function (request, response) {
   var sender = request.body.sender;
   var receiver = request.body.receiver;
+  var receivers = request.body.receivers;
   var image = request.body.image;
   var duration = request.body.duration;
+  var message = request.body.message;
 
-  if (image && sender && receiver && duration) {
+  if (receiver && !receivers) {
+    receivers = [receiver];
+  }
+  if (image && sender && receivers && duration) {
     if (isNaN(duration) || duration <= 0) {
       sendResponse(respone, util.format('Duration "%d" is not a valid duration.'));
     } else {
-      if (sender === receiver) {
-        sendResponse(response, 'You cannot send a puffer to yourself.', null);
-      } else {
-        userProvider.findOneByUsername(sender, function(error, result) {
-          if (error) {
-            sendResponse(response, error);
-          } else if (result) {
-            userProvider.findOneByUsername(receiver, function(error, result) {
-              if (error) {
-                sendResponse(response, error);
-              } else if (result) {
-                pufferController.newPuffer(sender, receiver, image, request.body.message, duration, function(error, puffer) {
-                  sendResponse(response, error, puffer);
-                });
-              } else {
-                sendResponse(response, util.format("User %s does not exist.", receiver));
-              }
-            });
-          } else {
-            sendResponse(response, util.format("User %s doesn't exist.", sender));
-          }
-        });
-      }
+      userProvider.findOneByUsername(sender, function(error, senderResult) {
+        if (error) {
+          sendResponse(response, error);
+        } else {
+          async.map(receivers, function(receiver, callback) {
+            if (sender === receiver) {
+              callback('You cannot send a puffer to yourself.');
+            } else if (senderResult) {
+              userProvider.findOneByUsername(receiver, function(error, receiverResult) {
+                if (error) {
+                  callback(error);
+                } else if (receiverResult) {
+                  callback(null, {
+                    sender: sender,
+                    receiver: receiver,
+                    image: image,
+                    duration: duration,
+                    message: message,
+                    read: false,
+                    expired: false
+                  });
+                } else {
+                  callback(util.format("User %s does not exist.", receiver));
+                }
+              });
+            }
+          }, function(error, results) {
+            if (error) {
+              sendResponse(response, error, results);
+            } else {
+              pufferController.newPuffer(results, function(error, pufferResults) {
+                sendResponse(response, error, pufferResults);
+              });
+            }
+          });
+        }
+      });
     }
   } else {
-    sendResponse(response, "Request missing one of required attributes: sender, receiver, image, or duration.");
+    sendResponse(response, "Request missing one of required attributes: sender, receiver(s), image, or duration.");
   }
 });
 

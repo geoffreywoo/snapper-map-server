@@ -9,7 +9,8 @@ ImageController = function() {
 
 ImageController.prototype.transitionPhoto = function(photoId, callback) {
   request({
-    uri: util.format('http://images.snappierchat.com/swap/%s', photoId),
+    uri: util.format('http://images.snappierchat.com:1337/swap/%s', photoId),
+    timeout: 600,
     method: 'PUT'
   }, function(error, response, body) {
     if (!error && response.statusCode == 200) {
@@ -17,8 +18,7 @@ ImageController.prototype.transitionPhoto = function(photoId, callback) {
     } else {
       callback(error, body);
     }
-  })
-
+  });
 }
 
 exports.ImageController = ImageController

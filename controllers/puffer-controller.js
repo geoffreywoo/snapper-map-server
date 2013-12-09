@@ -17,7 +17,7 @@ PufferController.prototype.setUserController = function (userController) {
 
 PufferController.prototype.outputPuffer = function(puffer_data, callback) {
   if (puffer_data) {
-    this.checkAndExpirePuffer(puffer_data, function(error, success, result) {
+    this.checkAndExpirePuffer(puffer_data, function(error, success) {
       var output_data = puffer_data;
       var timestamp = puffer_data.created_at;
       if (typeof(timestamp) == "object" &&
@@ -27,7 +27,7 @@ PufferController.prototype.outputPuffer = function(puffer_data, callback) {
       callback(null, output_data);
     });
   } else {
-    callback(util.format('Puffer data "%s" could not be processed.', puffer_data));
+    callback(util.format('Puffer data "%s" could not be processed.', puffer_data), null);
   }
 };
 
@@ -127,33 +127,16 @@ PufferController.prototype.expire = function (puffer, expired, callback) {
   if (expired === null || expired === undefined) { // Setting read without parameters sets expired to true.
     expired = true;
   }
-
-  this.imageController.transitionPhoto(puffer.id, function (error, result) {
-    this.pufferProvider.update(puffer.id, {"expired":expired}, function(error) {
-      this.pufferProvider.find({'_id': ObjectID(puffer.id)}, {}, function(error, result) {
-        if (!error && expired && result && result.length > 0 && result[0].receiver) {
-          receiver = result[0].receiver;
-          userController.resetBadgeCount(receiver, 'pufferchat', function (error, responseBody) {
-            if (error) {
-              console.log(error);// if push notification doesn't work just log it
-            }
-            callback(null, result);
-          });
-        } else {
-          callback(error, result);
-        }
-      });
-    }.bind(this));
+  this.imageController.transitionPhoto(puffer.image, function (error, result) {
+    this.pufferProvider.update(puffer.id, {"expired":expired}, callback);
   }.bind(this));
-
-
 };
 
 PufferController.prototype.checkAndExpirePuffer = function (puffer, callback) {
   if (!puffer.expired && puffer.created_at.getTime() + puffer.duration * 1000 < new Date().getTime()) {
-    this.expire(puffer, true, function(error, result) {
+    this.expire(puffer, true, function(error) {
       if (error) {
-        callback(error, false, result);
+        callback(error, false);
       } else {
         puffer.expired = true;
         callback(null, true);
@@ -164,34 +147,12 @@ PufferController.prototype.checkAndExpirePuffer = function (puffer, callback) {
   }
 };
 
-PufferController.prototype.newPuffer = function (sender, receiver, image, message, duration, callback) {
-  var pushController = this.pushController;
-  var userController = this.userController;
-  this.pufferProvider.save({
-    sender: sender,
-    receiver: receiver,
-    image: image,
-    message: message,
-    duration: duration,
-    read: false,
-    expired: false
-  }, function(error, docs) {
+PufferController.prototype.newPuffer = function (puffers, callback) {
+  this.pufferProvider.save(puffers, function(error, puffers) {
     if (error) {
       callback(error);
     } else {
-      userController.getBadgeCount(receiver, 'pufferchat', function (error, count) {
-        if (error) {
-          console.log(error);
-          callback(null, docs); // don't send error if getting badge count failed.
-        } else {
-          pushController.sendNotification(receiver, 'pufferchat', util.format('from %s', sender), count, function (error, responseBody) {
-            if (error) {
-              console.log(error);
-            }
-            callback(null, docs); // don't send error if push failed.
-          });
-        }
-      });
+      callback(null, puffers);
     }
   });
 };
