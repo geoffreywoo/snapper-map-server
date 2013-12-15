@@ -424,7 +424,7 @@ app.get('/puffers/:user_id', function(request, response) {
   });
 });
 
-app.put('/puffers/set_read/:toro_id', function(request, response) {
+app.put('/puffers/set_read/:puffer_id', function(request, response) {
   var read = request.body.read;
   if (read === null || read === undefined) { // Setting read without parameters sets read to true.
     read = true;
@@ -435,16 +435,9 @@ app.put('/puffers/set_read/:toro_id', function(request, response) {
       if (!error && read && result && result.length > 0 && result[0].receiver) {
         receiver = result[0].receiver;
         console.log(util.format('In set_read, resetting badge count of %s', receiver));
-        userController.resetBadgeCount(receiver, 'pufferchat', function (error, responseBody) {
-          if (error) {
-            console.log(error);// if push notification doesn't work just log it
-            console.log(responseBody);
-          }
-          sendResponse(response, null, result);
-        });
-      } else {
-        sendResponse(response, error, result);
+        pufferController.resetBadgeCount(receiver);
       }
+      sendResponse(response, error, result);
     });
   });
 });

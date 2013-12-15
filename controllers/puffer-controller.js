@@ -147,6 +147,16 @@ PufferController.prototype.checkAndExpirePuffer = function (puffer, callback) {
   }
 };
 
+PufferController.prototype.resetBadgeCount = function(username) {
+  this.getBadgeCount(username, function(error, count) {
+    if (error) {
+      console.log(util.format('Error resetting badge count: %s', error));
+    } else {
+      this.pushController.setBadgeCount(username, constants.APPS.PUFFERCHAT, count);
+    }
+  }.bind(this));
+};
+
 PufferController.prototype.getBadgeCount = function(username, callback) {
   this.findByReceiverUnread(username, function(error, puffers) {
     if (error) {
