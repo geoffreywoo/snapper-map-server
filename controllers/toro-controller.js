@@ -157,12 +157,8 @@ ToroController.prototype.newToro = function (sender, receiver, latitude, longitu
           console.log(error);
           callback(null, docs); // don't send error if getting badge count failed.
         } else {
-          pushController.sendNotification(receiver, 'pufferchat', util.format('from %s', sender), count, function (error, responseBody) {
-            if (error) {
-              console.log(error);
-            }
-            callback(null, docs); // don't send error if push failed.
-          });
+          pushController.sendNotification(receiver, constants.APPS.SNAPPERMAP, util.format('from %s', sender), count);
+          callback(null, docs); // don't send error if push failed.
         }
       });
     }

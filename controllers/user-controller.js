@@ -1,5 +1,6 @@
 var https = require('https'),
     util = require('util'),
+    request = require('request'),
     constants = require('../constants');
 
 var urban_airship_host = 'go.urbanairship.com';
@@ -13,34 +14,8 @@ UserController = function(pushController, toroController, pufferController) {
   this.pufferController = pufferController;
 };
 
-UserController.prototype.registerDeviceToken = function(username, device_token, callback) {
-  var body = JSON.stringify({
-    'alias': username
-  });
-  var options = {
-    hostname: urban_airship_host,
-    path: util.format('/api/device_tokens/%s/', device_token),
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': body.length
-    },
-    auth: util.format('%s:%s', urban_airship_appkey, urban_airship_appsecret)
-  };
-
-  var request = https.request(options, function(response) {
-    var statusCode = response.statusCode;
-    if (statusCode == 200 || statusCode == 201) {
-      callback(null);
-    } else {
-      callback(util.format('Airship API failed and returned code: %d', statusCode));
-    }
-  });
-  request.on('error', function (error) {
-    callback(error);
-  });
-  request.write(body);
-  request.end();
+UserController.prototype.registerDeviceToken = function(username, app, device_token, callback) {
+  pushController.enqueueDeviceTokenRequest(username, app, device_token);
 }
 
 UserController.prototype.unregisterDeviceToken = function(username, device_token, callback) {
@@ -84,9 +59,8 @@ UserController.prototype.resetBadgeCount = function(username, app, callback) {
       callback('Could not get the correct badge count!', null);
     } else {
       console.log(util.format('Resetting badge count for user %s to: %d', username, count));
-      this.pushController.setBadgeCount(username, app, count, function(error, responseBody) {
-        callback(error, responseBody);
-      });
+      this.pushController.setBadgeCount(username, app, count);
+      callback(null);
     }
   }.bind(this));
 }

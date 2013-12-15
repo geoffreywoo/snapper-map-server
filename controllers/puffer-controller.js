@@ -147,14 +147,38 @@ PufferController.prototype.checkAndExpirePuffer = function (puffer, callback) {
   }
 };
 
+PufferController.prototype.getBadgeCount = function(username, callback) {
+  this.findByReceiverUnread(username, function(error, puffers) {
+    if (error) {
+      callback(error);
+    } else if (puffers) {
+      callback(error, puffers.length);
+    } else {
+      callback(util.format('Puffers object could not be gotten for username %s', username));
+    }
+  });
+};
+
+PufferController.prototype.sendPushesForPuffers = function(puffers) {
+  async.each(puffers, function(puffer, callback) {
+    this.getBadgeCount(puffer.receiver, function (error, count) {
+      if (!error) {
+        this.pushController.sendNotification(puffer.receiver, constants.APPS.PUFFERCHAT, util.format('from %s', puffer.sender), count);
+      }
+      callback(error);
+    }.bind(this));
+  }.bind(this));
+};
+
 PufferController.prototype.newPuffer = function (puffers, callback) {
   this.pufferProvider.save(puffers, function(error, puffers) {
     if (error) {
       callback(error);
     } else {
+      this.sendPushesForPuffers(puffers);
       callback(null, puffers);
     }
-  });
+  }.bind(this));
 };
 
 exports.PufferController = PufferController;

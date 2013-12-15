@@ -1,74 +1,108 @@
-var https = require('https'),
-    util = require('util');
+var util = require('util'),
+    request = require('request'),
+    async = require('async');
 
 var urbanairship_options = {
-  'host': 'go.urbanairship.com',
-  'snappermap': {
-    'production': {
-      'appkey': 'RHYrm2hYTeKoT4C3JIyyHQ',
-      'appsecret': '633ZHRiESE23rSXgzWdK1Q',
-      'mastersecret': 'VkZ--zVCSfW78Gu5jyFwVg'
+  uri: 'https://go.urbanairship.com/api/push/',
+  device_token_uri: 'https://go.urbanairship.com/api/device_tokens/%s',
+  snappermap: {
+    production: {
+      appkey: 'RHYrm2hYTeKoT4C3JIyyHQ',
+      appsecret: '633ZHRiESE23rSXgzWdK1Q',
+      mastersecret: 'VkZ--zVCSfW78Gu5jyFwVg'
     },
-    'development': {
-      'appkey': '6w6o7r7RQue9QAbyg6tN2Q',
-      'appsecret': 'gd_o2UPsQMGzxXQ3sktDWw',
-      'mastersecret': 'E2xaw_GMTUWaTUXY_PlD3A'
+    development: {
+      appkey: '6w6o7r7RQue9QAbyg6tN2Q',
+      appsecret: 'gd_o2UPsQMGzxXQ3sktDWw',
+      mastersecret: 'E2xaw_GMTUWaTUXY_PlD3A'
     }
   },
-  'pufferchat': {
-    'production': {
-      'appkey': '2e4kjHZzQOevT8wz1dpZ-g',
-      'appsecret': 'M9uUvER4S9ypEmNVXLtMmA',
-      'mastersecret': '1M2ROeOGQquRIppSxa5sxw'
+  pufferchat: {
+    production: {
+      appkey: '2e4kjHZzQOevT8wz1dpZ-g',
+      appsecret: 'M9uUvER4S9ypEmNVXLtMmA',
+      mastersecret: '1M2ROeOGQquRIppSxa5sxw'
     },
-    'development': {
-      'appkey': 'DWehOd1hRrGgfJsiudQ3vw',
-      'appsecret': 'mS5AqSg2RS6wDVIg2X9Ojw',
-      'mastersecret': 'HMX_58EySFyF_BdYKdXxYw'
+    development: {
+      appkey: 'DWehOd1hRrGgfJsiudQ3vw',
+      appsecret: 'mS5AqSg2RS6wDVIg2X9Ojw',
+      mastersecret: 'HMX_58EySFyF_BdYKdXxYw'
     }
   }
-}
-var urban_airship_host = 'go.urbanairship.com';
-var urban_airship_appkey = '6w6o7r7RQue9QAbyg6tN2Q';
-var urban_airship_appsecret = 'gd_o2UPsQMGzxXQ3sktDWw';
-var urban_airship_mastersecret = 'E2xaw_GMTUWaTUXY_PlD3A';
+};
+
 PushController = function() {
+  this.pushQueue = async.queue(function (task, callback) {
+    makePushRequest(task.body, task.app, callback);
+  }, 4);
+  this.deviceTokenQueue = async.queue(function (task, callback) {
+    makeDeviceTokenRequest(task.username, task.app, task.device_token, callback);
+  }, 2);
+};
+
+var makeDeviceTokenRequest = function(username, app, device_token) {
+  var push_options = urbanairship_option[app].development
+  request.put({
+    body: JSON.stringify({
+      alias: username
+    }),
+    uri: util.format(urbanairship_options.device_token_uri, device_token),
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    auth: {
+      user: push_options.appkey,
+      pass: push_options.masterscret
+    }
+  }, function(error, response, body) {
+    callback(error);
+  });
 };
 
 var makePushRequest = function(body, app, callback) {
-  var request_body = JSON.stringify(body);
-  var options = {
-    hostname: urbanairship_options.host,
-    path: util.format('/api/push/'),
+  var push_options = urbanairship_options[app].development
+  request.post({
+    uri: urbanairship_options.uri,
     method: 'POST',
+    body: JSON.stringify(body),
     headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': request_body.length,
       'Accept': 'application/vnd.urbanairship+json; version=3;'
     },
-    auth: util.format('%s:%s', urban_airship_appkey, urban_airship_mastersecret)
-  };
-  var request = https.request(options, function (response) {
-    var statusCode = response.statusCode;
-    if (statusCode >= 200 && statusCode <= 203) {
-      response.on('data', function(chunk) {
-        callback(null, chunk);
-      });
-    } else {
-      response.on('data', function(chunk) {
-        callback(util.format('Airship response code was: %d', statusCode), chunk);
-      });
+    auth: {
+      'user': push_options.appkey,
+      'pass': push_options.mastersecret
+    }
+  }, function(error, response, body) {
+    callback(error);
+  });
+};
+
+PushController.prototype.enqueueDeviceTokenRequest = function(username, app, device_token) {
+  this.deviceTokenQueue.push({
+    username: username,
+    app: app,
+    device_token: device_token
+  }, function (error) {
+    if (error) {
+      console.log('Failed to complete task: ' + error);
     }
   });
-  request.write(request_body);
-  request.on('error', function (error) {
-    callback(error, null);
-  });
-  request.end();
-}
+};
 
-PushController.prototype.setBadgeCount = function(username, app, count, callback) {
-  makePushRequest({
+// This enqueues a push request.
+PushController.prototype.enqueuePushRequest = function(pushRequestBody, app) {
+  this.pushQueue.push({
+    body: pushRequestBody,
+    app: app
+  }, function(error) {
+    if (error) {
+      console.log('Failed to complete task: ' + error);
+    }
+  });
+};
+
+PushController.prototype.setBadgeCount = function(username, app, count) {
+  this.enqueuePushRequest({
     'audience': {
       'alias': username
     },
@@ -78,11 +112,11 @@ PushController.prototype.setBadgeCount = function(username, app, count, callback
       }
     },
     'device_types': ['ios']
-  }, app, callback);
-}
+  }, app);
+};
 
-PushController.prototype.sendNotification = function(username, app, message, count, callback) {
-  makePushRequest({
+PushController.prototype.sendNotification = function(username, app, message, count) {
+  this.enqueuePushRequest({
     'audience': {
       'alias': username
     },
@@ -94,7 +128,7 @@ PushController.prototype.sendNotification = function(username, app, message, cou
       }
     },
     'device_types': ['ios']
-  }, app, callback);
-}
+  }, app);
+};
 
 exports.PushController = PushController
