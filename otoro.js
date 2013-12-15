@@ -220,9 +220,15 @@ app.get('/users/get_badge_count/:username', function (request, response) {
 });
 
 app.get('/users/get_badge_count/:app/:username', function (request, response) {
-  userController.getBadgeCount(request.params.username, request.params.app, function (error, count) {
-    sendResponse(response, error, count);
-  });
+  if (request.params.app === constants.APPS.SNAPPERMAP) {
+    userController.getBadgeCount(request.params.username, request.params.app, function (error, count) {
+      sendResponse(response, error, count);
+    });
+  } else if (request.params.app === constants.APPS.PUFFERCHAT) {
+    pufferController.getBadgeCount(request.params.username, function(error, count) {
+      sendResponse(response, error, count);
+    });
+  }
 });
 
 app.get('/addressbooks/:username', function(request, response) {
@@ -451,6 +457,12 @@ app.put('/puffers/expire/:puffer_id', function(request, response) {
 app.put('/puffers/update/:puffer_id', function(request, response) {
   pufferProvider.update(request.params.puffer_id, request.body, function(error) {
     sendResponse(response, error, null);
+  });
+});
+
+app.get('/puffers/get_badge_count/:username', function (request, response) {
+  pufferController.getBadgeCount(request.params.username, function(error, count) {
+    sendResponse(response, error, count);
   });
 });
 
