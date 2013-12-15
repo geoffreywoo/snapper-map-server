@@ -51,6 +51,18 @@ PufferController.prototype.checkUserExistsError = function(username, callback) {
   });
 };
 
+PufferController.prototype.findById = function(id, callback) {
+  this.pufferProvider.find({'_id': ObjectID(id)}, {}, function(error, puffers) {
+    if (error) {
+      callback(error);
+    } else if (puffers && puffers.length > 0) {
+      callback(null, puffers[0]);
+    } else {
+      callback(util.format("Couldn't find puffer with id: %s", id));
+    }
+  });
+};
+
 PufferController.prototype.findByReceiver = function(username, callback) {
   this.checkUserExistsError(username, function(error) {
     if (error) {
@@ -123,12 +135,21 @@ PufferController.prototype.findBySenderOrReceiver = function(username, callback)
   }.bind(this));
 };
 
+PufferController.prototype.set_read = function(puffer, read, callback) {
+  this.pufferProvider.update(puffer._id, {"read": read}, function(error) {
+    if (!error) {
+      this.resetBadgeCount(puffer.receiver);
+    }
+    callback(error);
+  }.bind(this));
+}
+
 PufferController.prototype.expire = function (puffer, expired, callback) {
   if (expired === null || expired === undefined) { // Setting read without parameters sets expired to true.
     expired = true;
   }
   this.imageController.transitionPhoto(puffer.image, function (error, result) {
-    this.pufferProvider.update(puffer.id, {"expired":expired}, callback);
+    this.pufferProvider.update(puffer._id, {"expired":expired}, callback);
   }.bind(this));
 };
 

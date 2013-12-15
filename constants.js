@@ -9,3 +9,7 @@ define("APPS", {
   SNAPPERMAP: "snappermap",
   PUFFERCHAT: "pufferchat"
 });
+
+define("COLLECTIONS", {
+  PUFFER: "Puffers"
+});

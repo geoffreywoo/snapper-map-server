@@ -430,15 +430,14 @@ app.put('/puffers/set_read/:puffer_id', function(request, response) {
     read = true;
   }
   var puffer_id = request.params.puffer_id;
-  pufferProvider.update(puffer_id, {"read":read}, function(error) {
-    toroProvider.find({'_id': ObjectID(toro_id)}, {}, function(error, result) {
-      if (!error && read && result && result.length > 0 && result[0].receiver) {
-        receiver = result[0].receiver;
-        console.log(util.format('In set_read, resetting badge count of %s', receiver));
-        pufferController.resetBadgeCount(receiver);
-      }
-      sendResponse(response, error, result);
-    });
+  pufferController.findById(puffer_id, function(error, puffer) {
+    if (puffer) {
+      pufferController.set_read(puffer, read, function(error, puffer) {
+        sendResponse(response, error, puffer);
+      });
+    } else {
+      sendResponse(response, 'Could not find puffer.', null);
+    }
   });
 });
 

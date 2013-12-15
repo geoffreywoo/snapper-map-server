@@ -4,16 +4,15 @@ var mongo = require('mongodb'),
     BSON = mongo.BSON,
     ObjectID = require('mongodb').ObjectID,
     util = require('util'),
-    DBProvider = require('./dbprovider').DBProvider;
-
-var PUFFER_COLLECTION = 'Puffers';
+    DBProvider = require('./dbprovider').DBProvider,
+    constants = require('./constants');
 
 PufferProvider = function() {
   this.dbProvider = DBProvider.getInstance();
 };
 
 PufferProvider.prototype.find = function(query, options, callback) {
-  this.dbProvider.getCollection(PUFFER_COLLECTION, function(error, puffer_collection) {
+  this.dbProvider.getCollection(constants.COLLECTIONS.PUFFER, function(error, puffer_collection) {
     if (error) {
       callback(error);
     } else {
@@ -46,7 +45,7 @@ PufferProvider.prototype.findBySenderOrReceiver = function(username, callback, s
 
 //find all toros
 PufferProvider.prototype.findAll = function(callback) {
-    this.dbProvider.getCollection(PUFFER_COLLECTION, function(error, puffer_collection) {
+    this.dbProvider.getCollection(constants.COLLECTIONS.PUFFER, function(error, puffer_collection) {
       if( error ) callback(error)
       else {
         puffer_collection.find().toArray(function(error, results) {
@@ -59,7 +58,7 @@ PufferProvider.prototype.findAll = function(callback) {
 
 //save new Toro
 PufferProvider.prototype.save = function(toros, callback) {
-  this.dbProvider.getCollection(PUFFER_COLLECTION, function(error, puffer_collection) {
+  this.dbProvider.getCollection(constants.COLLECTIONS.PUFFER, function(error, puffer_collection) {
     if( error ) callback(error)
     else {
       if( typeof(toros.length)=="undefined")
@@ -77,13 +76,14 @@ PufferProvider.prototype.save = function(toros, callback) {
   });
 };
 
+// puffer_id is already an object id, so no need to convert it.
 PufferProvider.prototype.update = function(puffer_id, updates, callback) {
-    this.dbProvider.getCollection(PUFFER_COLLECTION, function(error, puffer_collection) {
+    this.dbProvider.getCollection(constants.COLLECTIONS.PUFFER, function(error, puffer_collection) {
       if (error) {
         callback(error);
       } else {
-        puffer_collection.update({"_id":ObjectID(puffer_id)}, {"$set":updates}, function() {
-          callback(null);
+        puffer_collection.update({"_id":puffer_id}, {"$set":updates}, function(error) {
+          callback(error);
         });
       }
     });
