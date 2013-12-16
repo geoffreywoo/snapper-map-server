@@ -69,4 +69,15 @@ PufferController.prototype.newPuffer = function (puffers, callback) {
   }.bind(this));
 };
 
+PufferController.prototype.sendPushesForPuffers = function(puffers) {
+  async.each(puffers, function(puffer, callback) {
+    this.getBadgeCount(puffer.receiver, function (error, count) {
+      if (!error) {
+        this.pushController.sendNotification(puffer.receiver, constants.APPS.PUFFERCHAT, util.format('from %s', puffer.sender), count);
+      }
+      callback(error);
+    }.bind(this));
+  }.bind(this));
+};
+
 exports.PufferController = PufferController;
