@@ -18,7 +18,7 @@ PufferController.prototype.getProvider = function() {
   return this.pufferProvider;
 };
 
-PufferController.prototype.outputPuffer = function(puffer_data, callback) {
+PufferController.prototype.outputData = function(puffer_data, callback) {
   if (puffer_data) {
     this.checkAndExpirePuffer(puffer_data, function(error, success) {
       var output_data = puffer_data;
