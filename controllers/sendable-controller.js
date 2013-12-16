@@ -131,12 +131,16 @@ SendableController.prototype.findBySenderOrReceiver = function(username, callbac
 };
 
 SendableController.prototype.setRead = function(sendable_object, read, callback) {
-  this.getProvider().update(sendable_object._id, {"read": read}, function(error) {
-    if (!error) {
-      this.resetBadgeCount(sendable_object.receiver);
-    }
-    callback(error);
-  }.bind(this));
+  if (sendable_object.read !== read) {
+    this.getProvider().update(sendable_object._id, {"read": read}, function(error) {
+      if (!error) {
+        this.resetBadgeCount(sendable_object.receiver);
+      }
+      callback(error);
+    }.bind(this));
+  } else {
+    callback(null);
+  }
 };
 
 SendableController.prototype.getBadgeCount = function(username, callback) {
