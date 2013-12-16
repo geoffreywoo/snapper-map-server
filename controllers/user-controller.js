@@ -8,10 +8,23 @@ var urban_airship_appkey = '6w6o7r7RQue9QAbyg6tN2Q';
 var urban_airship_appsecret = 'gd_o2UPsQMGzxXQ3sktDWw';
 var urban_airship_mastersecret = 'E2xaw_GMTUWaTUXY_PlD3A';
 
-UserController = function(pushController, toroController, pufferController) {
+UserController = function(pushController, toroController, pufferController, userProvider) {
   this.pushController = pushController;
   this.toroController = toroController;
   this.pufferController = pufferController;
+  this.userProvider = userProvider;
+};
+
+UserController.prototype.checkUserExistsError = function(username, callback) {
+  this.userProvider.findByUsername(username, function(error, users) {
+    if (error) {
+      callback(error);
+    } else if (users.length === 0) {
+      callback(util.format('User "%s" does not exist.', username));
+    } else {
+      callback(null);
+    }
+  });
 };
 
 UserController.prototype.registerDeviceToken = function(username, app, device_token, callback) {

@@ -25,7 +25,7 @@ var userProvider = new UserProvider();
 var toroProvider = new ToroProvider();
 var pushController = new PushController();
 var toroController = new ToroController(pushController);
-var userController = new UserController(pushController, toroController, pufferController);
+var userController = new UserController(pushController, toroController, pufferController, userProvider);
 toroController.setUserController(userController);
 var friendProvider = new FriendProvider();
 var addressbookProvider = new AddressbookProvider();
@@ -438,7 +438,7 @@ app.put('/puffers/set_read/:puffer_id', function(request, response) {
   var puffer_id = request.params.puffer_id;
   pufferController.findById(puffer_id, function(error, puffer) {
     if (puffer) {
-      pufferController.set_read(puffer, read, function(error, puffer) {
+      pufferController.setRead(puffer, read, function(error, puffer) {
         sendResponse(response, error, puffer);
       });
     } else {
