@@ -2,6 +2,8 @@ var util = require('util'),
     request = require('request'),
     async = require('async');
 
+var app_mode = process.env.APP_MODE || 'development'
+
 var urbanairship_options = {
   uri: 'https://go.urbanairship.com/api/push/',
   device_token_uri: 'https://go.urbanairship.com/api/device_tokens/%s',
@@ -41,7 +43,7 @@ PushController = function() {
 };
 
 var makeDeviceTokenRequest = function(username, app, device_token) {
-  var push_options = urbanairship_option[app].development
+  var push_options = urbanairship_option[app][app_mode];
   request.put({
     body: JSON.stringify({
       alias: username
@@ -60,7 +62,7 @@ var makeDeviceTokenRequest = function(username, app, device_token) {
 };
 
 var makePushRequest = function(body, app, callback) {
-  var push_options = urbanairship_options[app].development
+  var push_options = urbanairship_options[app][app_mode];
   request.post({
     uri: urbanairship_options.uri,
     method: 'POST',

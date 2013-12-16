@@ -82,6 +82,9 @@ PufferProvider.prototype.update = function(puffer_id, updates, callback) {
       if (error) {
         callback(error);
       } else {
+        if (typeof(puffer_id) === "string") {
+          puffer_id = ObjectID(puffer_id);
+        }
         puffer_collection.update({"_id":puffer_id}, {"$set":updates}, function(error) {
           callback(error);
         });

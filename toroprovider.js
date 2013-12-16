@@ -58,11 +58,12 @@ ToroProvider.prototype.findAll = function(callback) {
 //save new Toro
 ToroProvider.prototype.save = function(toros, callback) {
   this.dbProvider.getCollection('Toros', function(error, toro_collection) {
-    if( error ) callback(error)
-    else {
-      if( typeof(toros.length)=="undefined")
+    if (error) {
+      callback(error)
+    } else {
+      if (typeof(toros.length)=="undefined")  {
         toros = [toros];
-
+      }
       for( var i =0;i< toros.length;i++ ) {
         toro = toros[i];
         toro.created_at = new Date();
@@ -76,14 +77,17 @@ ToroProvider.prototype.save = function(toros, callback) {
 };
 
 ToroProvider.prototype.update = function(toro_id, updates, callback) {
-    this.dbProvider.getCollection('Toros', function(error, toro_collection) {
-      if( error ) callback(error)
-      else {
-        toro_collection.update({"_id":ObjectID(toro_id)}, {"$set":updates}, function() {
-          callback(null);
-        });
+  this.dbProvider.getCollection('Toros', function(error, toro_collection) {
+    if( error ) callback(error)
+    else {
+      if (typeof(toro_id) === "string") {
+        toro_id = ObjectID(toro_id);
       }
-    });
+      toro_collection.update({"_id":toro_id}, {"$set":updates}, function() {
+        callback(null);
+      });
+    }
+  });
 }
 
 exports.ToroProvider = ToroProvider;

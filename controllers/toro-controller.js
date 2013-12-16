@@ -37,10 +37,17 @@ var outputToros = function(toro_datas, callback) {
   }
 };
 
-ToroController = function(pushController) {
+function ToroController(pushController) {
+  SendableController.call(this, pushController, constants.APPS.SNAPPERMAP);
   this.toroProvider = new ToroProvider();
   this.userProvider = new UserProvider();
   this.pushController = pushController;
+};
+
+util.inherits(ToroController, SendableController);
+
+ToroController.prototype.getProvider = function() {
+  return this.toroProvider;
 };
 
 ToroController.prototype.setUserController = function (userController) {

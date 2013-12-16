@@ -329,22 +329,14 @@ app.put('/toros/set_read/:toro_id', function(request, response) {
     read = true;
   }
   var toro_id = request.params.toro_id;
-  toroProvider.update(toro_id, {"read":read}, function(error) {
-    toroProvider.find({'_id': ObjectID(toro_id)}, {}, function(error, result) {
-      if (!error && read && result && result.length > 0 && result[0].receiver) {
-        receiver = result[0].receiver;
-        console.log(util.format('In set_read, resetting badge count of %s', receiver));
-        userController.resetBadgeCount(receiver, constants.APPS.SNAPPERMAP, function (error, responseBody) {
-          if (error) {
-            console.log(error);// if push notification doesn't work just log it
-            console.log(responseBody);
-          }
-          sendResponse(response, null, result);
-        });
-      } else {
-        sendResponse(response, error, result);
-      }
-    });
+  toroController.findById(toro_id, function(error, toro) {
+    if (toro) {
+      toroController.setRead(toro, read, function(error, toro) {
+        sendResponse(response, error, toro);
+      });
+    } else {
+      sendResponse(response, 'Could not find toro.', null);
+    }
   });
 });
 
