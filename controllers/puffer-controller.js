@@ -10,26 +10,23 @@ var computeDurationText = function(duration) {
   var durationLeft = duration;
   var unit;
   if ((durationLeft / 60) < 1) {
-    unit = 'second'
+    unit = 's'
   } else {
     durationLeft /= 60;
     if ((durationLeft / 60) < 1) {
-      unit = 'minute';
+      unit = 'm';
     } else {
       durationLeft /= 60;
       if ((durationLeft / 24) < 1) {
-        unit = 'hour';
+        unit = 'h';
       } else {
         durationLeft /= 24;
-        unit = 'day';
+        unit = 'd';
       }
     }
   }
   durationLeft = Math.floor(durationLeft);
-  if (durationLeft > 1) {
-    unit += 's';
-  }
-  return util.format("%d %s", durationLeft, unit);
+  return util.format("%d%s", durationLeft, unit);
 };
 
 function PufferController(pushController) {
@@ -99,7 +96,7 @@ PufferController.prototype.sendPushesForPuffers = function(puffers) {
   async.each(puffers, function(puffer, callback) {
     this.getBadgeCount(puffer.receiver, function (error, count) {
       if (!error) {
-        this.pushController.sendNotification(puffer.receiver, constants.APPS.PUFFERCHAT, util.format('from %s: %s', puffer.sender, computeDurationText(puffer.duration)), count);
+        this.pushController.sendNotification(puffer.receiver, constants.APPS.PUFFERCHAT, util.format('from %s: %s to view.', puffer.sender, computeDurationText(puffer.duration)), count);
       }
       callback(error);
     }.bind(this));
