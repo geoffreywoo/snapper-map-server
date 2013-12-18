@@ -30,22 +30,6 @@ ToroController.prototype.outputData = function (toro_data, callback) {
   }
 };
 
-ToroController.prototype.setUserController = function (userController) {
-  this.userController = userController;
-}
-
-ToroController.prototype.checkUserExistsError = function(username, callback) {
-  this.userProvider.findByUsername(username, function(error, users) {
-    if (error) {
-      callback(error);
-    } else if (users.length === 0) {
-      callback(util.format('User "%s" does not exist.', username));
-    } else {
-      callback(null);
-    }
-  });
-};
-
 ToroController.prototype.newToro = function (sender, receiver, latitude, longitude, message, venue, venueID, callback) {
   var toroProvider = this.toroProvider;
   var userController = this.userController;

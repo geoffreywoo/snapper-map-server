@@ -13,3 +13,8 @@ define("APPS", {
 define("COLLECTIONS", {
   PUFFER: "Puffers"
 });
+
+define("CLIENT_APP_MODES", {
+  DEVELOPMENT: "development",
+  PRODUCTION: "production"
+});

@@ -28,7 +28,8 @@ UserController.prototype.checkUserExistsError = function(username, callback) {
 };
 
 UserController.prototype.registerDeviceToken = function(username, app, device_token, callback) {
-  pushController.enqueueDeviceTokenRequest(username, app, device_token);
+  pushController.enqueueDeviceTokenRequest(username, app, constants.CLIENT_APP_MODES.DEVELOPMENT, device_token);
+  pushController.enqueueDeviceTokenRequest(username, app, constants.CLIENT_APP_MODES.PRODUCTION, device_token);
 }
 
 UserController.prototype.unregisterDeviceToken = function(username, device_token, callback) {

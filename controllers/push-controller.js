@@ -1,8 +1,7 @@
 var util = require('util'),
     request = require('request'),
-    async = require('async');
-
-var app_mode = process.env.APP_MODE || 'development'
+    async = require('async'),
+    constants = require('../constants');
 
 var urbanairship_options = {
   uri: 'https://go.urbanairship.com/api/push/',
@@ -35,15 +34,18 @@ var urbanairship_options = {
 
 PushController = function() {
   this.pushQueue = async.queue(function (task, callback) {
-    makePushRequest(task.body, task.app, callback);
+    makePushRequest(task.body, task.app, task.app_mode, callback);
   }, 4);
   this.deviceTokenQueue = async.queue(function (task, callback) {
-    makeDeviceTokenRequest(task.username, task.app, task.device_token, callback);
+    makeDeviceTokenRequest(task.username, task.app, task.client_app_mode, task.device_token, callback);
   }, 2);
 };
 
-var makeDeviceTokenRequest = function(username, app, device_token) {
-  var push_options = urbanairship_option[app][app_mode];
+/**
+ * DEPRECATED: We're not using the clientside urbanairship library.
+ */
+var makeDeviceTokenRequest = function(username, app, client_app_mode, device_token) {
+  var push_options = urbanairship_option[app][client_app_mode];
   request.put({
     body: JSON.stringify({
       alias: username
@@ -61,8 +63,8 @@ var makeDeviceTokenRequest = function(username, app, device_token) {
   });
 };
 
-var makePushRequest = function(body, app, callback) {
-  var push_options = urbanairship_options[app][app_mode];
+var makePushRequest = function(body, app, client_app_mode, callback) {
+  var push_options = urbanairship_options[app][client_app_mode];
   request.post({
     uri: urbanairship_options.uri,
     method: 'POST',
@@ -79,10 +81,14 @@ var makePushRequest = function(body, app, callback) {
   });
 };
 
-PushController.prototype.enqueueDeviceTokenRequest = function(username, app, device_token) {
+/**
+ * DEPRECATED: We're not using the clientside urbanairship library.
+ */
+PushController.prototype.enqueueDeviceTokenRequest = function(username, app, client_app_mode, device_token) {
   this.deviceTokenQueue.push({
     username: username,
     app: app,
+    client_app_mode: client_app_mode
     device_token: device_token
   }, function (error) {
     if (error) {
@@ -92,10 +98,11 @@ PushController.prototype.enqueueDeviceTokenRequest = function(username, app, dev
 };
 
 // This enqueues a push request.
-PushController.prototype.enqueuePushRequest = function(pushRequestBody, app) {
+PushController.prototype.enqueuePushRequest = function(pushRequestBody, app, client_app_mode) {
   this.pushQueue.push({
     body: pushRequestBody,
-    app: app
+    app: app,
+    client_app_mode: client_app_mode
   }, function(error) {
     if (error) {
       console.log('Failed to complete task: ' + error);
@@ -118,7 +125,7 @@ PushController.prototype.setBadgeCount = function(username, app, count) {
 };
 
 PushController.prototype.sendNotification = function(username, app, message, count) {
-  this.enqueuePushRequest({
+  var push_request_body = {
     'audience': {
       'alias': username
     },
@@ -130,7 +137,9 @@ PushController.prototype.sendNotification = function(username, app, message, cou
       }
     },
     'device_types': ['ios']
-  }, app);
+  };
+  this.enqueuePushRequest(push_request_body, app, constants.CLIENT_APP_MODES.PRODUCTION);
+  this.enqueuePushRequest(push_request_body, app, constants.CLIENT_APP_MODES.DEVELOPMENT);
 };
 
 exports.PushController = PushController
