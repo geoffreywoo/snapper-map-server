@@ -6,6 +6,32 @@ var util = require('util'),
     SendableController = require('./sendable-controller').SendableController,
     constants = require('../constants');
 
+var computeDurationText = function(duration) {
+  var durationLeft = duration;
+  var unit;
+  if ((durationLeft / 60) < 1) {
+    unit = 'second'
+  } else {
+    durationLeft /= 60;
+    if ((durationLeft / 60) < 1) {
+      unit = 'minute';
+    } else {
+      durationLeft /= 60;
+      if ((durationLeft / 24) < 1) {
+        unit = 'hour';
+      } else {
+        durationLeft /= 24;
+        unit = 'day';
+      }
+    }
+  }
+  durationLeft = Math.floor(durationLeft);
+  if (durationLeft > 1) {
+    unit += 's';
+  }
+  return util.format("%d %s", durationLeft, unit);
+};
+
 function PufferController(pushController) {
   SendableController.call(this, pushController, constants.APPS.PUFFERCHAT);
   this.pufferProvider = new PufferProvider();
@@ -73,7 +99,7 @@ PufferController.prototype.sendPushesForPuffers = function(puffers) {
   async.each(puffers, function(puffer, callback) {
     this.getBadgeCount(puffer.receiver, function (error, count) {
       if (!error) {
-        this.pushController.sendNotification(puffer.receiver, constants.APPS.PUFFERCHAT, util.format('from %s', puffer.sender), count);
+        this.pushController.sendNotification(puffer.receiver, constants.APPS.PUFFERCHAT, util.format('from %s: %s', puffer.sender, computeDurationText(puffer.duration)), count);
       }
       callback(error);
     }.bind(this));
