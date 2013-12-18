@@ -34,7 +34,7 @@ var urbanairship_options = {
 
 PushController = function() {
   this.pushQueue = async.queue(function (task, callback) {
-    makePushRequest(task.body, task.app, task.app_mode, callback);
+    makePushRequest(task.body, task.app, task.client_app_mode, callback);
   }, 4);
   this.deviceTokenQueue = async.queue(function (task, callback) {
     makeDeviceTokenRequest(task.username, task.app, task.client_app_mode, task.device_token, callback);
@@ -88,7 +88,7 @@ PushController.prototype.enqueueDeviceTokenRequest = function(username, app, cli
   this.deviceTokenQueue.push({
     username: username,
     app: app,
-    client_app_mode: client_app_mode
+    client_app_mode: client_app_mode,
     device_token: device_token
   }, function (error) {
     if (error) {
@@ -111,7 +111,7 @@ PushController.prototype.enqueuePushRequest = function(pushRequestBody, app, cli
 };
 
 PushController.prototype.setBadgeCount = function(username, app, count) {
-  this.enqueuePushRequest({
+  var push_request_body = {
     'audience': {
       'alias': username
     },
@@ -121,7 +121,9 @@ PushController.prototype.setBadgeCount = function(username, app, count) {
       }
     },
     'device_types': ['ios']
-  }, app);
+  };
+  this.enqueuePushRequest(push_request_body, app, constants.CLIENT_APP_MODES.PRODUCTION);
+  this.enqueuePushRequest(push_request_body, app, constants.CLIENT_APP_MODES.DEVELOPMENT);
 };
 
 PushController.prototype.sendNotification = function(username, app, message, count) {
