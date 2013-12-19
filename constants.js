@@ -18,3 +18,7 @@ define("CLIENT_APP_MODES", {
   DEVELOPMENT: "development",
   PRODUCTION: "production"
 });
+
+define('HOSTS', {
+  IMAGE_SERVICE: "http://image-service.pufferchat.com:1337/swap/%s"
+});
