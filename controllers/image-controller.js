@@ -1,7 +1,7 @@
 var http = require('http'),
     util = require('util'),
     request = require('request'),
-    constants = require('constants');
+    constants = require('../constants');
 
 ImageController = function() {
 };
