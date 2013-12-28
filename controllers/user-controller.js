@@ -30,7 +30,7 @@ UserController.prototype.checkUserExistsError = function(username, callback) {
 UserController.prototype.registerDeviceToken = function(username, app, device_token, callback) {
   pushController.enqueueDeviceTokenRequest(username, app, constants.CLIENT_APP_MODES.DEVELOPMENT, device_token);
   pushController.enqueueDeviceTokenRequest(username, app, constants.CLIENT_APP_MODES.PRODUCTION, device_token);
-}
+};
 
 UserController.prototype.unregisterDeviceToken = function(username, device_token, callback) {
   var options = {
@@ -45,7 +45,7 @@ UserController.prototype.unregisterDeviceToken = function(username, device_token
     });
   });
   request.end();
-}
+};
 
 UserController.prototype.getBadgeCount = function(username, app, callback) {
   var controller;
@@ -65,7 +65,7 @@ UserController.prototype.getBadgeCount = function(username, app, callback) {
       callback(util.format('Toros object could not be gotten for username %s', username));
     }
   });
-}
+};
 
 UserController.prototype.resetBadgeCount = function(username, app, callback) {
   this.getBadgeCount(username, app, function(error, count) {
@@ -77,6 +77,6 @@ UserController.prototype.resetBadgeCount = function(username, app, callback) {
       callback(null);
     }
   }.bind(this));
-}
+};
 
-exports.UserController = UserController
+exports.UserController = UserController;

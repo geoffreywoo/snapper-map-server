@@ -14,25 +14,12 @@ var mongoUri = process.env.MONGOHQ_URL ||
 var mongoParsedUri = MongoURI.parse(mongoUri);
 
 DBProvider = function() {
-  this.db= new Db(mongoParsedUri.database, new Server(mongoParsedUri.hosts[0], mongoParsedUri.ports[0], {safe: true}, {auto_reconnect: true}, {}));
-  this.db.open(function(err, client){
+  this.db = new Db(mongoParsedUri.database, new Server(mongoParsedUri.hosts[0], mongoParsedUri.ports[0], {safe: true, auto_reconnect: true}));
+  this.db.open(function(err, client) {
     if (mongoParsedUri.username && mongoParsedUri.password) {
       client.authenticate(mongoParsedUri.username, mongoParsedUri.password, function(error, success) {
       });
     }
-    var fixtures = require('pow-mongodb-fixtures').connect(mongoParsedUri.database, {
-      host: mongoParsedUri.hosts[0],
-      port: mongoParsedUri.ports[0],
-      user: mongoParsedUri.username,
-      pass: mongoParsedUri.password
-    });
-    fixtures.load('fixtures/users.js', function(error) {
-      if (error) {
-        console.log(util.format('Error loading fixtures: %s', error));
-      } else {
-        console.log('Fixtures loaded successfully!');
-      }
-    });
   });
 };
 
@@ -43,10 +30,13 @@ DBProvider.getInstance = function() {
   return this.instance;
 }
 
-DBProvider.prototype.getCollection= function(collection, callback) {
-  this.db.collection(collection, function(error, user_collection) {
-    if( error ) callback(error);
-    else callback(null, user_collection);
+DBProvider.prototype.getCollection= function(collection_name, callback) {
+  this.db.collection(collection_name, function(error, collection) {
+    if (error) {
+      callback(error);
+    } else {
+      callback(null, collection);
+    }
   });
 };
 
