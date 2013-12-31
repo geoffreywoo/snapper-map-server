@@ -5,6 +5,7 @@ var express = require("express"),
     http = require('http'),
     path = require('path'),
     async = require('async'),
+    crypto = require('crypto'),
     ObjectID = require('mongodb').ObjectID,
     UserProvider = require('./userprovider').UserProvider,
     UserController = require('./controllers/user-controller').UserController,
@@ -19,18 +20,20 @@ var express = require("express"),
 
 
 app.use(express.logger());
-app.use(express.bodyParser());
+app.use(express.json());
+app.use(express.urlencoded());
+app.use(express.query());
 
 var userProvider = new UserProvider();
 var toroProvider = new ToroProvider();
 var pushController = new PushController();
 var toroController = new ToroController(pushController);
+var pufferController = new PufferController(pushController);
 var userController = new UserController(pushController, toroController, pufferController, userProvider);
 toroController.setUserController(userController);
 var friendProvider = new FriendProvider();
 var addressbookProvider = new AddressbookProvider();
 var friendController = new FriendController();
-var pufferController = new PufferController(pushController);
 pufferController.setUserController(userController);
 
 app.configure('development', function() {
@@ -74,28 +77,8 @@ app.post('/login', function(request, response) {
   var appName = request.body.app || constants.APPS.SNAPPERMAP;
   if (username) {
     username = username.toLowerCase();
-    userProvider.findByUsername(username, function (error, existing_users) {
-      if (error) {
-        sendResponse(response, error, null);
-      } else if (existing_users.length === 0) {
-        sendResponse(response, util.format('User "%s" not found.', username), null);
-      } else {
-        var user = null;
-        for (var i = 0; i < existing_users.length; i++) {
-          if (request.body.password == existing_users[i].password) {
-            user = existing_users[i];
-            user['password'] = '';
-            break;
-          }
-        }
-        if (user) {
-          userController.resetBadgeCount(username, appName, function (error, data) {
-            sendResponse(response, null, user);
-          });
-        } else {
-          sendResponse(response, 'Password did not match.', null);
-        }
-      }
+    userController.authenticate(username, request.body.password, appName, function(error, user) {
+      sendResponse(response, error, user);
     });
   } else {
     sendResponse(response, 'Did not include username in login request');
@@ -121,7 +104,8 @@ app.post('/logout', function (request, response) {
 
 app.post('/users/new', function(request, response) {
   var username = request.body.username;
-  if (username) {
+  var password = request.body.password;
+  if (username && password) {
     username = username.toLowerCase();
     userProvider.findByUsername(username, function (error, existing_users) {
       if (error) {
@@ -136,12 +120,7 @@ app.post('/users/new', function(request, response) {
           } else if (existing_users.length > 0) {
             sendResponse(response, util.format('Email "%s" already exists.', email), null);
           } else {
-            userProvider.save({
-              username: username,
-              password: request.body.password,
-              email: email,
-              phone: request.body.phone
-            }, function(error, docs) {
+            userController.save(username, request.body.password, email, request.body.phone, function(error, docs) {
               if (error) {
                 sendResponse(response, error, docs);
               } else {
@@ -168,6 +147,21 @@ app.get('/users', function(request, response) {
 app.get('/users/:username', function(request, response) {
   userProvider.findByUsername(request.params.username, function (error, docs) {
     sendResponse(response, error, docs);
+  });
+});
+
+app.get('/users/migrate_password/:username', function(request, response) {
+  userProvider.findByUsername(request.params.username, function (error, users) {
+    if (users.length > 0) {
+      var user = users[0];
+      if (user.salt === "" || user.salt === undefined || user.salt === null) {
+        userController.migratePassword(user, function(error, user) {
+          sendResponse(response, error, user);
+        });
+      } else {
+        sendResponse(response, 'already migrated', user);
+      }
+    }
   });
 });
 

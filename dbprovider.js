@@ -14,7 +14,7 @@ var mongoUri = process.env.MONGOHQ_URL ||
 var mongoParsedUri = MongoURI.parse(mongoUri);
 
 DBProvider = function() {
-  this.db = new Db(mongoParsedUri.database, new Server(mongoParsedUri.hosts[0], mongoParsedUri.ports[0], {safe: true, auto_reconnect: true}));
+  this.db = new Db(mongoParsedUri.database, new Server(mongoParsedUri.hosts[0], mongoParsedUri.ports[0], {auto_reconnect: true}), {safe: true});
   this.db.open(function(err, client) {
     if (mongoParsedUri.username && mongoParsedUri.password) {
       client.authenticate(mongoParsedUri.username, mongoParsedUri.password, function(error, success) {

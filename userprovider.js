@@ -129,11 +129,14 @@ UserProvider.prototype.addressBookMatch = function (phones, emails, callback) {
 };
 
 UserProvider.prototype.update = function (user_id, updates, callback) {
+  console.log('user_id is: ' + user_id);
   this.dbProvider.getCollection('Users', function (error, user_collection) {
     if (error) {
       callback(error);
     } else {
-      updates["phone"] = userUtils.normalizePhone(updates["phone"])
+      if (updates.phone) {
+        updates.phone = userUtils.normalizePhone(updates.phone);
+      }
       user_collection.update({"_id":user_id}, {"$set":updates}, function() {
         callback(null);
       });
