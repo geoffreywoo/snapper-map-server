@@ -5,22 +5,34 @@ var mongo = require('mongodb'),
 	  BSON = mongo.BSON,
     MongoURI = require('mongo-uri'),
     util = require('util');
-
-
-var mongoUri = process.env.MONGOHQ_URL ||
-  process.env.MONGOLAB_URI ||
-  'mongodb://localhost:27017/node-mongo-User';
-
-var mongoParsedUri = MongoURI.parse(mongoUri);
+    dbConfig = require('./config/db.json');
 
 DBProvider = function() {
-  this.db = new Db(mongoParsedUri.database, new Server(mongoParsedUri.hosts[0], mongoParsedUri.ports[0], {auto_reconnect: true}), {safe: true});
-  this.db.open(function(err, client) {
-    if (mongoParsedUri.username && mongoParsedUri.password) {
-      client.authenticate(mongoParsedUri.username, mongoParsedUri.password, function(error, success) {
-      });
+  var config;
+  if (process.env.MONGOHQ_URL) {
+    config = MongoURI.parse(process.env.MONGOHQ_URL);
+    config.host = config.hosts[0];
+    config.port = config.ports[0];
+  } else {
+    var env = process.env.DATA_REALM || 'local';
+    for (var i in dbConfig) {
+      if (dbConfig[i].realm == env) {
+        config = dbConfig[i]
+        break;
+      }
     }
-  });
+  }
+  if (config) {
+    this.db = new Db(config.database, new Server(config.host, config.port, {auto_reconnect: true}), {safe: true});
+    this.db.open(function(err, client) {
+      if (config.username && config.password) {
+        client.authenticate(config.username, config.password, function(error, success) {
+        });
+      }
+    });
+  } else {
+    throw new Error(util.format('Failed to initialize DB. Could not find valid environment variable MONGOHQ_URL or valid env matching %s in %s', env, './config/db.json'));
+  }
 };
 
 DBProvider.getInstance = function() {

@@ -1,0 +1,26 @@
+[
+  {
+    "realm": "azure",
+    "host": "widmore.mongohq.com",
+    "port": 10000,
+    "username": "fish-apps",
+    "password": "fish-apps-!",
+    "database": "otoro"
+  },
+  {
+    "realm": "heroku",
+    "host": "paulo.mongohq.com",
+    "port": 10094,
+    "username": "heroku",
+    "password": "gAFvuKEdWDOY2o7NmxCbVOXnPjtqU833y6JI4RpPAWm_R2Ojie9XOCqLwOUo3W20WX02ExhRq9xArRjk7FgQNw",
+    "database": "app17049523"
+  },
+  {
+    "realm": "local",
+    "host": "localhost",
+    "port": 27017,
+    "username": "",
+    "password": "",
+    "database": "node-mongo-User"
+  }
+]
