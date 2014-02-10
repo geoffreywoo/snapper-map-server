@@ -144,6 +144,10 @@ app.get('/users', function(request, response) {
   });
 });
 
+app.get('/version', function(request, response) {
+  sendResponse(response, null, "Version: 1.0.1");
+});
+
 app.get('/users/:username', function(request, response) {
   userProvider.findByUsername(request.params.username, function (error, docs) {
     sendResponse(response, error, docs);
