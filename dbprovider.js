@@ -25,8 +25,10 @@ DBProvider = function() {
   if (config) {
     this.db = new Db(config.database, new Server(config.host, config.port, {auto_reconnect: true}), {safe: true});
     this.db.open(function(err, client) {
+      console.log("Mongo client opened with:", config);
       if (config.username && config.password) {
         client.authenticate(config.username, config.password, function(error, success) {
+          console.log("Authentication success is: ", success);
         });
       }
     });
